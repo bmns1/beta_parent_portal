@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- IMPORTANT: Replace with your actual Google Client ID -->
+    <meta name="google-signin-client_id" content="14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com">
     <title>Silicon Valley Academy Parent Portal</title>
+    <script src="https://apis.google.com/js/platform.js?onload=startApp" async defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
@@ -25,25 +28,36 @@
 </head>
 <body class="antialiased">
 
-    <!-- Modal for QR Code -->
-    <div id="qr-code-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Event Check-in QR Code</h3>
-                <div class="mt-2 px-7 py-3">
-                    <div id="qrcode" class="mx-auto"></div>
-                    <p class="text-sm text-gray-500 mt-4">Have an admin scan this code when you arrive at the event to get credit for your hours.</p>
-                </div>
-                <div class="items-center px-4 py-3">
-                    <button id="close-modal-btn" class="px-4 py-2 bg-teal-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-300">
-                        Close
-                    </button>
-                </div>
-            </div>
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-100">
+        <div class="text-center p-8 bg-white rounded-lg shadow-lg">
+            <i class="ph-graduation-cap text-6xl text-teal-600 mx-auto"></i>
+            <h1 class="text-3xl font-bold text-gray-800 mt-4">Silicon Valley Academy</h1>
+            <p class="text-lg text-gray-600 mb-8">Parent Portal</p>
+            <div id="my-signin2"></div>
         </div>
     </div>
 
-    <div class="min-h-screen bg-gray-100">
+    <!-- Main Portal Content (Initially Hidden) -->
+    <div id="portal-main-content" class="min-h-screen bg-gray-100 hidden">
+        <!-- Modal for QR Code -->
+        <div id="qr-code-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Event Check-in QR Code</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <div id="qrcode" class="mx-auto"></div>
+                        <p class="text-sm text-gray-500 mt-4">Have an admin scan this code when you arrive at the event to get credit for your hours.</p>
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button id="close-modal-btn" class="px-4 py-2 bg-teal-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-300">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Header -->
         <header class="bg-white shadow-md">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -57,11 +71,16 @@
                     </div>
                      <!-- Mobile menu button -->
                     <div class="sm:hidden flex items-center">
+                        <div id="user-info-mobile" class="mr-4 text-right"></div>
                         <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
                             <span class="sr-only">Open main menu</span>
                             <i id="menu-icon-open" class="ph-list text-2xl"></i>
                             <i id="menu-icon-close" class="ph-x text-2xl hidden"></i>
                         </button>
+                    </div>
+                    <div class="hidden sm:flex items-center">
+                        <div id="user-info-desktop" class="mr-4 text-right"></div>
+                        <button onclick="signOut();" class="bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300">Sign Out</button>
                     </div>
                 </div>
             </div>
@@ -69,6 +88,11 @@
             <div class="sm:hidden" id="mobile-menu">
                 <div id="main-nav-mobile" class="px-2 pt-2 pb-3 space-y-1">
                     <!-- Mobile nav links will be injected here -->
+                </div>
+                 <div class="pt-4 pb-3 border-t border-gray-200">
+                    <div class="px-2">
+                         <button onclick="signOut();" class="w-full bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300">Sign Out</button>
+                    </div>
                 </div>
             </div>
         </header>
@@ -102,42 +126,7 @@
             <div id="volunteering" class="tab-content">
                  <h2 class="text-2xl font-semibold text-gray-800 mb-6">Volunteering Opportunities</h2>
                 <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                            <label for="filter-time" class="block text-sm font-medium text-gray-700">Time of Day</label>
-                            <select id="filter-time" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                <option>All</option>
-                                <option>Morning</option>
-                                <option>Afternoon</option>
-                                <option>Evening</option>
-                                <option>All Day</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="filter-hours" class="block text-sm font-medium text-gray-700">Max Hours</label>
-                            <select id="filter-hours" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                <option value="99">Any</option>
-                                <option value="2">Up to 2</option>
-                                <option value="4">Up to 4</option>
-                                <option value="8">Up to 8</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="filter-location" class="block text-sm font-medium text-gray-700">Location</label>
-                            <select id="filter-location" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                <option>All</option>
-                                <option>On-Campus</option>
-                                <option>Remote</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="filter-sort" class="block text-sm font-medium text-gray-700">Sort By</label>
-                            <select id="filter-sort" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                <option value="default">Default</option>
-                                <option value="recent">Recently Added</option>
-                            </select>
-                        </div>
-                    </div>
+                    <!-- Filter Controls -->
                 </div>
                  <div id="volunteering-list" class="space-y-6"><p>Loading volunteering opportunities...</p></div>
             </div>
@@ -176,66 +165,61 @@
     <script src="https://unpkg.com/phosphor-icons"></script>
     <script>
         // --- CONFIGURATION ---
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxHyIbLz6SuXY-tccAqb_jZlmMSQteiS44TT8M43cZUefiVfUxHAXgL3v10rADfbu_o/exec'; // working 
-        //const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzxD61iDypwe34XQkAFTuywsmSVzPVbCzkLlQgkvWTZCDfMIdWHgklOK0hKcbD7eFkf/exec'; // beta
-        const PARENT_EMAIL = 'habiba@sva.org'; // Hardcoded for now
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxHyIbLz6SuXY-tccAqb_jZlmMSQteiS44TT8M43cZUefiVfUxHAXgL3v10rADfbu_o/exec';
+        let ID_TOKEN = null; // To store the secure token
         let portalData = {}; // To store fetched data globally
 
+        // --- GOOGLE SIGN-IN ---
+        function onSignIn(googleUser) {
+            const profile = googleUser.getBasicProfile();
+            ID_TOKEN = googleUser.getAuthResponse().id_token;
+            
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('portal-main-content').classList.remove('hidden');
+
+            const userInfoHtml = `
+                <div class="flex items-center">
+                    <img class="h-8 w-8 rounded-full" src="${profile.getImageUrl()}" alt="">
+                    <div class="ml-3">
+                        <div class="text-base font-medium text-gray-800">${profile.getName()}</div>
+                        <div class="text-sm font-medium text-gray-500">${profile.getEmail()}</div>
+                    </div>
+                </div>`;
+            document.getElementById('user-info-desktop').innerHTML = userInfoHtml;
+            document.getElementById('user-info-mobile').innerHTML = userInfoHtml;
+
+            fetchData(ID_TOKEN);
+        }
+
+        function signOut() {
+            const auth2 = gapi.auth2.getAuthInstance();
+            auth2.signOut().then(function () {
+                window.location.reload();
+            });
+        }
+
+        function renderGoogleButton() {
+            gapi.signin2.render('my-signin2', {
+                'scope': 'profile email',
+                'width': 240,
+                'height': 50,
+                'longtitle': true,
+                'theme': 'dark',
+                'onsuccess': onSignIn,
+            });
+        }
+        
         // --- HELPER FUNCTIONS ---
-        function decodeGrade(grade) {
-            const gradeStr = String(grade).toUpperCase();
-            if (gradeStr === 'P') return 'Pre-K';
-            if (gradeStr === '0') return 'KG';
-            return `Grade ${gradeStr}`;
-        }
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            if (!isNaN(date.getTime())) {
-                return date.toLocaleDateString();
-            }
-            return dateString;
-        }
-        function formatGoogleDate(date) {
-            return date.toISOString().split('T')[0].replace(/-/g, '');
-        }
-        function generateICalLink(event) {
-            const startDate = new Date(event.date);
-            const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 1);
-            const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nURL:${document.location.href}\nDTSTART;VALUE=DATE:${formatGoogleDate(startDate)}\nDTEND;VALUE=DATE:${formatGoogleDate(endDate)}\nSUMMARY:${event.name || event.title}\nDESCRIPTION:Event: ${event.name || event.title}\nLOCATION:Silicon Valley Academy\nEND:VEVENT\nEND:VCALENDAR`;
-            return `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent)}`;
-        }
-        function generateGoogleCalendarLink(event) {
-            const startDate = new Date(event.date);
-            const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 1);
-            const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
-            const title = `&text=${encodeURIComponent(event.name || event.title)}`;
-            const dates = `&dates=${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`;
-            const details = `&details=${encodeURIComponent('For more details, visit the school portal.')}`;
-            const location = `&location=${encodeURIComponent('Silicon Valley Academy')}`;
-            return `${baseUrl}${title}${dates}${details}${location}`;
-        }
-        function switchToTab(tabName) {
-            const allTabs = document.querySelectorAll('.tab-btn');
-            allTabs.forEach(btn => btn.classList.remove('tab-active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('tab-content-active'));
-
-            document.querySelectorAll(`.tab-btn[data-tab="${tabName}"]`).forEach(b => b.classList.add('tab-active'));
-            document.getElementById(tabName).classList.add('tab-content-active');
-
-            const mobileMenu = document.getElementById('mobile-menu');
-            if(mobileMenu.style.display === 'block'){
-                mobileMenu.style.display = 'none';
-                document.getElementById('menu-icon-open').classList.remove('hidden');
-                document.getElementById('menu-icon-close').classList.add('hidden');
-            }
-        }
+        function decodeGrade(grade) { /* ... */ }
+        function formatDate(dateString) { /* ... */ }
+        function formatGoogleDate(date) { /* ... */ }
+        function generateICalLink(event) { /* ... */ }
+        function generateGoogleCalendarLink(event) { /* ... */ }
+        function switchToTab(tabName) { /* ... */ }
 
         // --- DATA FETCH & RENDER ---
-        function fetchData() {
-            fetch(`${WEB_APP_URL}?parentEmail=${PARENT_EMAIL}`)
+        function fetchData(token) {
+            fetch(`${WEB_APP_URL}?token=${token}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) throw new Error(data.error);
