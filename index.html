@@ -532,6 +532,22 @@
                     }
 
                     const qrButtonHtml = `<button data-signup-id="${signup.signupId}" class="show-qr-btn mt-4 w-full sm:w-auto text-sm bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-700 transition">Show Check-in Code</button>`;
+                    
+                    const dropdownId = `signup-cal-dropdown-${index}`;
+                    const calendarButtonHtml = `
+                        <div class="relative inline-block text-left">
+                            <div>
+                                <button type="button" class="add-to-calendar-btn inline-flex items-center justify-center w-full rounded-md border border-gray-300 shadow-sm px-3 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none" data-dropdown-id="${dropdownId}" data-event-name="${signup.title}" data-event-date="${signup.date}">
+                                    <i class="ph-plus-circle mr-2"></i> Add
+                                </button>
+                            </div>
+                            <div id="${dropdownId}" class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10" role="menu">
+                                <div class="py-1" role="none">
+                                    <a href="#" class="google-cal-link text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Google Calendar</a>
+                                    <a href="#" class="ical-link text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">iCal/Outlook</a>
+                                </div>
+                            </div>
+                        </div>`;
 
                     item.innerHTML = `
                         <div class="flex flex-col sm:flex-row justify-between">
@@ -546,6 +562,7 @@
                             <div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 text-left sm:text-right space-y-2">
                                 ${qrButtonHtml}
                                 ${withdrawButtonHtml}
+                                ${calendarButtonHtml}
                             </div>
                         </div>
                     `;
@@ -713,6 +730,25 @@
                     window.location.href = `mailto:${recipients}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                 }
 
+                // Show QR Code button
+                if (target.matches('.show-qr-btn')) {
+                    const signupId = target.dataset.signupId;
+                    const qrCodeContainer = document.getElementById('qrcode');
+                    qrCodeContainer.innerHTML = ''; // Clear previous QR code
+                    
+                    const checkinUrl = `https://bmns1.github.io/checkin/?signupId=${signupId}`;
+                    const qr = qrcode(0, 'M');
+                    qr.addData(checkinUrl);
+                    qr.make();
+                    qrCodeContainer.innerHTML = qr.createImgTag(6); // size 6
+
+                    document.getElementById('qr-code-modal').classList.remove('hidden');
+                }
+
+                if (target.matches('#close-modal-btn')) {
+                    document.getElementById('qr-code-modal').classList.add('hidden');
+                }
+
 
                 // Main nav tabs (desktop and mobile)
                 if (target.closest('.tab-btn')) {
@@ -758,3 +794,7 @@
     </script>
 </body>
 </html>
+
+
+
+
