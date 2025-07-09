@@ -49,7 +49,9 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20">
                     <div class="flex items-center">
-                        <div class="flex-shrink-0"><i class="ph-graduation-cap text-4xl text-teal-600"></i></div>
+                        <div class="flex-shrink-0">
+                            <img src="https://drive.google.com/uc?export=view&id=1QYmhsF2YrsbCLgvYVNb9aN8RxQwx7bb-" alt="SVA Logo" class="h-12 w-12">
+                        </div>
                         <div class="ml-4">
                             <h1 class="text-2xl font-bold text-gray-800">Silicon Valley Academy</h1>
                             <p class="text-sm text-gray-500">Parent Portal</p>
@@ -101,8 +103,21 @@
 
             <div id="volunteering" class="tab-content">
                  <h2 class="text-2xl font-semibold text-gray-800 mb-6">Volunteering Opportunities</h2>
+                 <div class="mb-6 bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Volunteering Objectives & Rules</h3>
+                    <p class="text-gray-600 text-sm">
+                        Our parent volunteer program is essential to the success of our school community. The primary objective is to foster a strong partnership between parents and the school, enriching our students' educational experience. We require each family to complete a set number of volunteer hours per school year. Please sign up for opportunities that match your interests and schedule. If you must withdraw from a commitment, please do so at least three weeks in advance to allow another parent to take the spot. Failure to show up for a signed-up event without prior cancellation will result in a penalty, increasing your total required hours. Thank you for your dedication to our students and school!
+                    </p>
+                </div>
                 <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div>
+                            <label for="filter-event" class="block text-sm font-medium text-gray-700">Filter by Event</label>
+                            <select id="filter-event" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                <option value="all">All Events</option>
+                                <!-- Event options will be populated by JS -->
+                            </select>
+                        </div>
                         <div>
                             <label for="filter-time" class="block text-sm font-medium text-gray-700">Time of Day</label>
                             <select id="filter-time" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
@@ -237,16 +252,29 @@
             fetch(`${WEB_APP_URL}?parentEmail=${PARENT_EMAIL}`)
                 .then(response => response.json())
                 .then(data => {
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    document.getElementById('portal-container').classList.remove('hidden');
                     if (data.error) throw new Error(data.error);
                     portalData = data; 
                     renderDashboard(portalData.students);
                     renderActionsTab(portalData.students);
+                    populateEventFilter(portalData.allEvents);
                     applyAndRenderFilters(); 
                     renderMySignups(portalData.mySignups, portalData.volunteerProgress);
                     renderMobileMenu();
                     if (typeof phosphor !== 'undefined') phosphor.replace();
                 })
-                .catch(error => { console.error('Fetch Error:', error); });
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    const loadingOverlay = document.getElementById('loading-overlay');
+                    loadingOverlay.innerHTML = `
+                        <div class="text-center">
+                            <i class="ph-x-circle text-6xl text-red-500 mx-auto"></i>
+                            <h2 class="text-2xl font-semibold text-gray-700 mt-4">Failed to Load Portal</h2>
+                            <p class="text-gray-500">Could not retrieve data. Please try refreshing the page.</p>
+                        </div>
+                    `;
+                });
         }
 
         function renderDashboard(students) {
@@ -278,23 +306,30 @@
                 
                 let eventsHtml = (student.events && student.events.length > 0) ? student.events.map((event, index) => {
                     const dropdownId = `event-dropdown-${student.uniqueStudentId}-${index}`;
+                    const volunteerStatusColor = event.totalSignedUp >= event.totalNeeded ? 'text-green-600' : 'text-red-600';
+                    const volunteerText = (event.totalNeeded > 0) ? `<p class="text-xs font-semibold ${volunteerStatusColor}">Volunteers: ${event.totalSignedUp} of ${event.totalNeeded}</p>` : '';
+
                     return `
                         <li class="border-t pt-4 flex justify-between items-center">
                             <div>
                                 <p class="font-semibold">${event.name}</p>
                                 <p class="text-sm text-gray-500">${formatDate(event.date)}</p>
+                                ${volunteerText}
                             </div>
-                            <div class="relative inline-block text-left">
-                                <div>
-                                    <button type="button" class="add-to-calendar-btn inline-flex items-center justify-center w-full rounded-md border border-gray-300 shadow-sm px-3 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none" data-dropdown-id="${dropdownId}" data-event-name="${event.name}" data-event-date="${event.date}">
-                                        <i class="ph-plus-circle mr-2"></i>
-                                        Add
-                                    </button>
-                                </div>
-                                <div id="${dropdownId}" class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10" role="menu">
-                                    <div class="py-1" role="none">
-                                        <a href="#" class="google-cal-link text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Google Calendar</a>
-                                        <a href="#" class="ical-link text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">iCal/Outlook</a>
+                            <div class="flex flex-col space-y-2 items-end">
+                                <button type="button" class="volunteer-for-event-btn w-full text-sm bg-teal-100 text-teal-800 font-semibold py-1 px-3 rounded-lg hover:bg-teal-200" data-event-id="${event.id}">Volunteer</button>
+                                <div class="relative inline-block text-left w-full">
+                                    <div>
+                                        <button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-gray-300 shadow-sm px-3 py-1 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none" data-dropdown-id="${dropdownId}" data-event-name="${event.name}" data-event-date="${event.date}">
+                                            <i class="ph-plus-circle mr-2"></i>
+                                            Add
+                                        </button>
+                                    </div>
+                                    <div id="${dropdownId}" class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10" role="menu">
+                                        <div class="py-1" role="none">
+                                            <a href="#" class="google-cal-link text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">Google Calendar</a>
+                                            <a href="#" class="ical-link text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" role="menuitem">iCal/Outlook</a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -433,12 +468,16 @@
             let filteredOpportunities = [...portalData.volunteering];
 
             // Get current filter values
+            const eventFilterValue = document.getElementById('filter-event').value;
             const timeFilter = document.getElementById('filter-time').value;
             const hoursFilter = parseInt(document.getElementById('filter-hours').value, 10);
             const locationFilter = document.getElementById('filter-location').value;
             const sortFilter = document.getElementById('filter-sort').value;
 
             // Apply filters
+            if (eventFilterValue !== 'all') {
+                filteredOpportunities = filteredOpportunities.filter(opp => opp.eventid === eventFilterValue);
+            }
             if (timeFilter !== 'All') {
                 filteredOpportunities = filteredOpportunities.filter(opp => opp.timeOfDay === timeFilter);
             }
@@ -455,6 +494,29 @@
             }
             
             renderVolunteering(filteredOpportunities);
+        }
+
+        function populateEventFilter(events) {
+            const eventFilter = document.getElementById('filter-event');
+            if (!eventFilter || !events) return;
+
+            const uniqueEvents = new Map();
+            events.forEach(event => {
+                if (event.id && !uniqueEvents.has(event.id)) {
+                    uniqueEvents.set(event.id, event.name);
+                }
+            });
+            
+            while (eventFilter.options.length > 1) {
+                eventFilter.remove(1);
+            }
+
+            uniqueEvents.forEach((name, id) => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = name;
+                eventFilter.appendChild(option);
+            });
         }
 
         function renderMySignups(signups, progress) {
@@ -775,6 +837,14 @@
                     mobileMenu.style.display = isMenuOpen ? 'none' : 'block';
                     openIcon.classList.toggle('hidden', !isMenuOpen);
                     closeIcon.classList.toggle('hidden', isMenuOpen);
+                }
+
+                // Volunteer for event button
+                if (target.matches('.volunteer-for-event-btn')) {
+                    const eventId = target.dataset.eventId;
+                    switchToTab('volunteering');
+                    document.getElementById('filter-event').value = eventId;
+                    applyAndRenderFilters();
                 }
             });
 
