@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Silicon Valley Academy Parent Portal</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
@@ -25,176 +26,294 @@
 </head>
 <body class="antialiased">
 
-    <!-- Modal for QR Code -->
-    <div id="qr-code-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Event Check-in QR Code</h3>
-                <div class="mt-2 px-7 py-3">
-                    <div id="qrcode" class="mx-auto"></div>
-                    <p class="text-sm text-gray-500 mt-4">Have an admin scan this code when you arrive at the event to get credit for your hours.</p>
-                </div>
-                <div class="items-center px-4 py-3">
-                    <button id="close-modal-btn" class="px-4 py-2 bg-teal-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-300">
-                        Close
-                    </button>
-                </div>
-            </div>
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-100">
+        <div class="text-center p-8 bg-white rounded-lg shadow-lg">
+            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-24 w-auto mx-auto mb-4">
+            <h1 class="text-3xl font-bold text-gray-800 mt-4">Silicon Valley Academy</h1>
+            <p class="text-lg text-gray-600 mb-8">Parent Portal</p>
+            <div id="google-signin-button-container" class="flex justify-center"></div>
         </div>
     </div>
 
-    <div class="min-h-screen bg-gray-100">
-        <!-- Header -->
-        <header class="bg-white shadow-md">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-20">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <img src="https://drive.google.com/uc?export=view&id=1QYmhsF2YrsbCLgvYVNb9aN8RxQwx7bb-" alt="SVA Logo" class="h-12 w-12">
-                        </div>
-                        <div class="ml-4">
-                            <h1 class="text-2xl font-bold text-gray-800">Silicon Valley Academy</h1>
-                            <p class="text-sm text-gray-500">Parent Portal</p>
-                        </div>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-50 hidden">
+        <div class="text-center">
+            <i class="ph-spinner-gap text-6xl text-teal-600 mx-auto animate-spin"></i>
+            <h2 class="text-2xl font-semibold text-gray-700 mt-4">Loading Portal Data...</h2>
+            <p class="text-gray-500">Please wait a moment.</p>
+        </div>
+    </div>
+
+    <!-- Main Portal Content (Initially Hidden) -->
+    <div id="portal-container" class="hidden">
+        <!-- Modal for QR Code -->
+        <div id="qr-code-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Event Check-in QR Code</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <div id="qrcode" class="mx-auto"></div>
+                        <p class="text-sm text-gray-500 mt-4">Have an admin scan this code when you arrive at the event to get credit for your hours.</p>
                     </div>
-                     <!-- Mobile menu button -->
-                    <div class="sm:hidden flex items-center">
-                        <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
-                            <span class="sr-only">Open main menu</span>
-                            <i id="menu-icon-open" class="ph-list text-2xl"></i>
-                            <i id="menu-icon-close" class="ph-x text-2xl hidden"></i>
+                    <div class="items-center px-4 py-3">
+                        <button id="close-modal-btn" class="px-4 py-2 bg-teal-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-300">
+                            Close
                         </button>
                     </div>
                 </div>
             </div>
-             <!-- Mobile menu, show/hide based on menu state. -->
-            <div class="sm:hidden" id="mobile-menu">
-                <div id="main-nav-mobile" class="px-2 pt-2 pb-3 space-y-1">
-                    <!-- Mobile nav links will be injected here -->
-                </div>
-            </div>
-        </header>
+        </div>
 
-        <!-- Navigation Tabs -->
-        <nav class="hidden sm:block bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div id="main-nav" class="flex justify-center -mb-px">
-                    <button class="tab-btn tab-active text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="dashboard"><i class="ph-house mr-2"></i> Student Dashboard</button>
-                    <button class="tab-btn text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="actions"><i class="ph-bell-ringing mr-2"></i> Actions</button>
-                    <button class="tab-btn text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="volunteering"><i class="ph-hands-clapping mr-2"></i> Volunteering</button>
-                    <button class="tab-btn text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="signups"><i class="ph-list-checks mr-2"></i> My Signups</button>
-                    <button class="tab-btn text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="calendar"><i class="ph-calendar mr-2"></i> Calendar</button>
-                    <button class="tab-btn text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="links"><i class="ph-link mr-2"></i> Quick Links</button>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div id="dashboard" class="tab-content tab-content-active">
-                 <h2 class="text-3xl font-bold text-gray-800 mb-6">My Students</h2>
-                <div id="student-content-container" class="space-y-12"></div>
-            </div>
-            
-            <div id="actions" class="tab-content">
-                <h2 class="text-3xl font-bold text-gray-800 mb-6">Actions</h2>
-                <div id="actions-content-container"></div>
-            </div>
-
-            <div id="volunteering" class="tab-content">
-                 <h2 class="text-2xl font-semibold text-gray-800 mb-6">Volunteering Opportunities</h2>
-                 <div class="mb-6 bg-white p-6 rounded-lg shadow-sm">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Volunteering Objectives & Rules</h3>
-                    <p class="text-gray-600 text-sm">
-                        Our parent volunteer program is essential to the success of our school community. The primary objective is to foster a strong partnership between parents and the school, enriching our students' educational experience. We require each family to complete a set number of volunteer hours per school year. Please sign up for opportunities that match your interests and schedule. If you must withdraw from a commitment, please do so at least three weeks in advance to allow another parent to take the spot. Failure to show up for a signed-up event without prior cancellation will result in a penalty, increasing your total required hours. Thank you for your dedication to our students and school!
-                    </p>
-                </div>
-                <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                        <div>
-                            <label for="filter-event" class="block text-sm font-medium text-gray-700">Filter by Event</label>
-                            <select id="filter-event" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                <option value="all">All Events</option>
-                                <!-- Event options will be populated by JS -->
-                            </select>
+        <div class="min-h-screen bg-gray-100">
+            <!-- Header -->
+            <header class="bg-white shadow-md">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center justify-between h-20">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-12 w-auto">
+                            </div>
+                            <div class="ml-4">
+                                <h1 class="text-2xl font-bold text-gray-800">Silicon Valley Academy</h1>
+                                <p class="text-sm text-gray-500">Parent Portal</p>
+                            </div>
                         </div>
-                        <div>
-                            <label for="filter-time" class="block text-sm font-medium text-gray-700">Time of Day</label>
-                            <select id="filter-time" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                <option>All</option>
-                                <option>Morning</option>
-                                <option>Afternoon</option>
-                                <option>Evening</option>
-                                <option>All Day</option>
-                            </select>
+                         <!-- Mobile menu button -->
+                        <div class="sm:hidden flex items-center">
+                             <div id="user-info-mobile" class="mr-4 text-right"></div>
+                            <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+                                <span class="sr-only">Open main menu</span>
+                                <i id="menu-icon-open" class="ph-list text-2xl"></i>
+                                <i id="menu-icon-close" class="ph-x text-2xl hidden"></i>
+                            </button>
                         </div>
-                        <div>
-                            <label for="filter-hours" class="block text-sm font-medium text-gray-700">Max Hours</label>
-                            <select id="filter-hours" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                <option value="99">Any</option>
-                                <option value="2">Up to 2</option>
-                                <option value="4">Up to 4</option>
-                                <option value="8">Up to 8</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="filter-location" class="block text-sm font-medium text-gray-700">Location</label>
-                            <select id="filter-location" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                <option>All</option>
-                                <option>On-Campus</option>
-                                <option>Remote</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="filter-sort" class="block text-sm font-medium text-gray-700">Sort By</label>
-                            <select id="filter-sort" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                <option value="default">Default</option>
-                                <option value="recent">Recently Added</option>
-                            </select>
+                        <div class="hidden sm:flex items-center">
+                            <div id="user-info-desktop" class="mr-4 text-right"></div>
+                            <button onclick="signOut();" class="bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300">Sign Out</button>
                         </div>
                     </div>
                 </div>
-                 <div id="volunteering-list" class="space-y-6"><p>Loading volunteering opportunities...</p></div>
-            </div>
-
-            <div id="signups" class="tab-content">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-6">My Volunteer Hours</h2>
-                <div id="my-signups-content"></div>
-            </div>
-
-            <div id="calendar" class="tab-content">
-                 <h2 class="text-2xl font-semibold text-gray-800 mb-6">School Calendar</h2>
-                 <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <iframe src="https://calendar.google.com/calendar/embed?src=svaschool.org_us4ga4j1cfs27epj0f2dfegcl0%40group.calendar.google.com&ctz=America/Los_Angeles" style="border: 0" width="100%" height="600" frameborder="0" scrolling="no"></iframe>
+                 <!-- Mobile menu, show/hide based on menu state. -->
+                <div class="sm:hidden" id="mobile-menu">
+                    <div id="main-nav-mobile" class="px-2 pt-2 pb-3 space-y-1">
+                        <!-- Mobile nav links will be injected here -->
+                    </div>
+                    <div class="pt-4 pb-3 border-t border-gray-200">
+                        <div class="px-2">
+                             <button onclick="signOut();" class="w-full bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700 transition duration-300">Sign Out</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </header>
 
-            <div id="links" class="tab-content">
-               <h2 class="text-2xl font-semibold text-gray-800 mb-6">Quick Links</h2>
-                 <div class="bg-white p-6 rounded-lg shadow">
-                    <ul class="space-y-3">
-                        <li><a href="#" class="text-teal-600 hover:underline">School Website</a></li>
-                        <li><a href="#" class="text-teal-600 hover:underline">District Website</a></li>
-                        <li><a href="#" class="text-teal-600 hover:underline">Lunch Menus</a></li>
-                        <li><a href="#" class="text-teal-600 hover:underline">Staff Directory</a></li>
-                        <li><a href="#" class="text-teal-600 hover:underline">Athletics Schedule</a></li>
-                    </ul>
+            <!-- Navigation Tabs -->
+            <nav class="hidden sm:block bg-white shadow-sm">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div id="main-nav" class="flex justify-center -mb-px">
+                        <button class="tab-btn tab-active text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="dashboard"><i class="ph-house mr-2"></i> Student Dashboard</button>
+                        <button class="tab-btn text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="actions"><i class="ph-bell-ringing mr-2"></i> Actions</button>
+                        <button class="tab-btn text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="volunteering"><i class="ph-hands-clapping mr-2"></i> Volunteering</button>
+                        <button class="tab-btn text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="signups"><i class="ph-list-checks mr-2"></i> My Signups</button>
+                        <button class="tab-btn text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="pto"><i class="ph-users-three mr-2"></i> PTO</button>
+                        <button class="tab-btn text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="resources"><i class="ph-link mr-2"></i> Newsletters and Links</button>
+                        <button class="tab-btn text-gray-600 hover:text-teal-600 py-4 px-6 block hover:text-teal-500 focus:outline-none" data-tab="calendar"><i class="ph-calendar mr-2"></i> Calendar</button>
+                    </div>
                 </div>
-            </div>
-        </main>
-        
-        <footer class="bg-white mt-12">
-             <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500"><p>&copy; 2025 Silicon Valley Academy. All Rights Reserved.</p></div>
-        </footer>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                <div id="dashboard" class="tab-content tab-content-active">
+                     <h2 class="text-3xl font-bold text-gray-800 mb-6">My Students</h2>
+                    <div id="student-content-container" class="space-y-12"></div>
+                </div>
+                
+                <div id="actions" class="tab-content">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">Actions</h2>
+                    <div id="actions-content-container"></div>
+                </div>
+
+                <div id="volunteering" class="tab-content">
+                     <h2 class="text-2xl font-semibold text-gray-800 mb-6">Volunteering Opportunities</h2>
+                    <div class="mb-6 bg-white p-6 rounded-lg shadow-sm">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Volunteering Objectives & Rules</h3>
+                        <p class="text-gray-600 text-sm">
+                            Our parent volunteer program is essential to the success of our school community. The primary objective is to foster a strong partnership between parents and the school, enriching our students' educational experience. We require each family to complete a set number of volunteer hours per school year, divided between two semesters. Please sign up for opportunities that match your interests and schedule. If you must withdraw from a commitment, please do so at least three weeks in advance to allow another parent to take the spot. Failure to show up for a signed-up event without prior cancellation will result in a penalty, increasing your total required hours. Thank you for your dedication to our students and school!
+                        </p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label for="filter-semester" class="block text-sm font-medium text-gray-700">Semester</label>
+                                <select id="filter-semester" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option value="all">All</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filter-event" class="block text-sm font-medium text-gray-700">Filter by Event</label>
+                                <select id="filter-event" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option value="all">All Events</option>
+                                    <!-- Event options will be populated by JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filter-time" class="block text-sm font-medium text-gray-700">Time of Day</label>
+                                <select id="filter-time" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option>All</option>
+                                    <option>Morning</option>
+                                    <option>Afternoon</option>
+                                    <option>Evening</option>
+                                    <option>All Day</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filter-hours" class="block text-sm font-medium text-gray-700">Max Hours</label>
+                                <select id="filter-hours" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option value="99">Any</option>
+                                    <option value="2">Up to 2</option>
+                                    <option value="4">Up to 4</option>
+                                    <option value="8">Up to 8</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filter-location" class="block text-sm font-medium text-gray-700">Location</label>
+                                <select id="filter-location" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option>All</option>
+                                    <option>On-Campus</option>
+                                    <option>Remote</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filter-sort" class="block text-sm font-medium text-gray-700">Sort By</label>
+                                <select id="filter-sort" class="filter-control mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option value="default">Default</option>
+                                    <option value="recent">Recently Added</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                     <div id="volunteering-list" class="space-y-6"><p>Loading volunteering opportunities...</p></div>
+                </div>
+
+                <div id="signups" class="tab-content">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-6">My Volunteer Hours</h2>
+                    <div id="my-signups-content"></div>
+                </div>
+
+                <div id="pto" class="tab-content">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">Parent-Teacher Organization (PTO)</h2>
+                    <div class="bg-white p-8 rounded-lg shadow-sm space-y-8">
+                        <div>
+                            <h3 class="text-xl font-semibold text-teal-700 mb-2">Building a Strong School Community Together</h3>
+                            <p class="text-gray-600">As-salamu alaykum! The SVA Parent-Teacher Organization (PTO) warmly welcomes all new and returning families. We believe that a high level of parent participation is critical to the success of our students' education, tarbiyah, and development. The PTO is a formal, volunteer-based organization of parents, teachers, and staff working together to enhance the SVA student experience.</p>
+                        </div>
+                        <div class="border-t pt-6">
+                            <h3 class="text-xl font-semibold text-teal-700 mb-2">Our Mission & Key Roles</h3>
+                            <ul class="list-disc list-inside space-y-2 text-gray-600">
+                                <li><strong>Organize Enriching Events:</strong> We plan and execute co-curricular events and activities like International Day, Book Fairs, Movie Nights, and the Hajj Simulation to enrich our children's education.</li>
+                                <li><strong>Raise Funds:</strong> Through community efforts, we raise funds to support vital school programs, classroom needs, and new initiatives.</li>
+                                <li><strong>Build Community:</strong> We strive to create a strong, collaborative, and supportive environment that connects parents, teachers, and staff.</li>
+                                <li><strong>Shape the Educational Experience:</strong> The PTO provides a valuable opportunity for parents to have a voice and actively contribute to their children's journey at SVA.</li>
+                            </ul>
+                        </div>
+                         <div class="border-t pt-6">
+                            <h3 class="text-xl font-semibold text-teal-700 mb-2">Get Involved</h3>
+                            <p class="text-gray-600 mb-4">Every parent and guardian at SVA is automatically a member of the PTO! We encourage you to get involved. You can sign up to be a committee member for a specific event or support year-long school programs.</p>
+                            <div class="bg-teal-50 p-4 rounded-lg">
+                                <h4 class="font-semibold">2025-26 PTO Volunteering Leads:</h4>
+                                <ul class="list-disc list-inside mt-2">
+                                    <li>Rubeka A.</li>
+                                    <li>Esraa El T.</li>
+                                    <li>Ahmed S.</li>
+                                </ul>
+                                <p class="mt-4">Interested in becoming a PTO lead, help out, or have a question? To reach the PTO leadership, please email <a href="mailto:pto-xx@svamail.com" class="text-teal-600 font-semibold hover:underline">pto-xx@svamail.com</a>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="resources" class="tab-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h2 class="text-3xl font-bold text-gray-800 mb-6">Newsletters</h2>
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <ul id="newsletters-list" class="space-y-4">
+                                    <!-- Newsletter items will be injected here by JavaScript -->
+                                </ul>
+                            </div>
+                        </div>
+                        <div>
+                            <h2 class="text-3xl font-bold text-gray-800 mb-6">Quick Links</h2>
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <ul id="quick-links-list" class="space-y-4">
+                                    <!-- Quick Link items will be injected here by JavaScript -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="calendar" class="tab-content">
+                     <h2 class="text-2xl font-semibold text-gray-800 mb-6">School Calendar</h2>
+                     <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <iframe src="https://calendar.google.com/calendar/embed?src=svaschool.org_us4ga4j1cfs27epj0f2dfegcl0%40group.calendar.google.com&ctz=America/Los_Angeles" style="border: 0" width="100%" height="600" frameborder="0" scrolling="no"></iframe>
+                    </div>
+                </div>
+            </main>
+            
+            <footer class="bg-white mt-12">
+                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500"><p>&copy; 2025 BMS. All Rights Reserved.</p></div>
+            </footer>
+        </div>
     </div>
     
     <script src="https://unpkg.com/phosphor-icons"></script>
     <script>
         // --- CONFIGURATION ---
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxHyIbLz6SuXY-tccAqb_jZlmMSQteiS44TT8M43cZUefiVfUxHAXgL3v10rADfbu_o/exec';
-        const PARENT_EMAIL = 'habiba@sva.org'; // Hardcoded for now
+        const NEWSLETTER_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdZkNNppgbr_FdH2FOAztYpujc9A4URAsQIlWnADSypDlb5_KnCiVP3EImRK96jWK3Yg/exec';
+        const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
+        let ID_TOKEN = null; // To store the secure token
         let portalData = {}; // To store fetched data globally
 
+        // --- GOOGLE SIGN-IN ---
+        function handleCredentialResponse(response) {
+            ID_TOKEN = response.credential;
+            
+            const base64Url = ID_TOKEN.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            const profile = JSON.parse(jsonPayload);
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('loading-overlay').classList.remove('hidden');
+
+            const userInfoHtml = `
+                <div class="flex items-center">
+                    <img class="h-8 w-8 rounded-full" src="${profile.picture}" alt="">
+                    <div class="ml-3">
+                        <div class="text-base font-medium text-gray-800">${profile.name}</div>
+                        <div class="text-sm font-medium text-gray-500">${profile.email}</div>
+                    </div>
+                </div>`;
+            document.getElementById('user-info-desktop').innerHTML = userInfoHtml;
+            document.getElementById('user-info-mobile').innerHTML = userInfoHtml;
+
+            fetchData(ID_TOKEN);
+            fetchAndRenderResources();
+            addEventListeners();
+        }
+
+        function signOut() {
+            google.accounts.id.disableAutoSelect();
+            window.location.reload();
+        }
+        
         // --- HELPER FUNCTIONS ---
         function decodeGrade(grade) {
             const gradeStr = String(grade).toUpperCase();
@@ -248,8 +367,8 @@
         }
 
         // --- DATA FETCH & RENDER ---
-        function fetchData() {
-            fetch(`${WEB_APP_URL}?parentEmail=${PARENT_EMAIL}`)
+        function fetchData(token) {
+            fetch(`${WEB_APP_URL}?token=${token}`)
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('loading-overlay').classList.add('hidden');
@@ -260,21 +379,84 @@
                     renderActionsTab(portalData.students);
                     populateEventFilter(portalData.allEvents);
                     applyAndRenderFilters(); 
-                    renderMySignups(portalData.mySignups, portalData.volunteerProgress);
+                    renderMySignups(portalData.volunteerProgress);
+                    renderMySignupsList(portalData.mySignups);
                     renderMobileMenu();
                     if (typeof phosphor !== 'undefined') phosphor.replace();
                 })
                 .catch(error => {
                     console.error('Fetch Error:', error);
                     const loadingOverlay = document.getElementById('loading-overlay');
-                    loadingOverlay.innerHTML = `
-                        <div class="text-center">
-                            <i class="ph-x-circle text-6xl text-red-500 mx-auto"></i>
-                            <h2 class="text-2xl font-semibold text-gray-700 mt-4">Failed to Load Portal</h2>
-                            <p class="text-gray-500">Could not retrieve data. Please try refreshing the page.</p>
-                        </div>
-                    `;
+                    if (loadingOverlay) {
+                        loadingOverlay.innerHTML = `
+                            <div class="text-center">
+                                <i class="ph-x-circle text-6xl text-red-500 mx-auto"></i>
+                                <h2 class="text-2xl font-semibold text-gray-700 mt-4">Failed to Load Portal</h2>
+                                <p class="text-gray-500">Could not retrieve data. Please try refreshing the page.</p>
+                            </div>
+                        `;
+                    }
                 });
+        }
+
+        function fetchAndRenderResources() {
+            fetch(NEWSLETTER_WEB_APP_URL)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        renderNewsletters(data.data.newsletters);
+                        renderQuickLinks(data.data.quickLinks);
+                    } else {
+                        throw new Error(data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Resources Fetch Error:', error);
+                    const newslettersList = document.getElementById('newsletters-list');
+                    if (newslettersList) {
+                        newslettersList.innerHTML = '<p class="text-red-500">Could not load newsletters.</p>';
+                    }
+                    const quickLinksList = document.getElementById('quick-links-list');
+                    if (quickLinksList) {
+                        quickLinksList.innerHTML = '<p class="text-red-500">Could not load quick links.</p>';
+                    }
+                });
+        }
+
+        function renderNewsletters(newsletters) {
+            const list = document.getElementById('newsletters-list');
+            if (!list) return;
+            list.innerHTML = '';
+
+            if (!newsletters || newsletters.length === 0) {
+                list.innerHTML = '<li><p class="text-gray-500">No newsletters found.</p></li>';
+                return;
+            }
+
+            newsletters.forEach(newsletter => {
+                const item = document.createElement('li');
+                item.className = 'border-b pb-2';
+                item.innerHTML = `<a href="${newsletter.link}" target="_blank" class="text-teal-600 hover:underline">${newsletter.title}</a>`;
+                list.appendChild(item);
+            });
+        }
+
+        function renderQuickLinks(links) {
+            const list = document.getElementById('quick-links-list');
+            if (!list) return;
+            list.innerHTML = '';
+
+            if (!links || links.length === 0) {
+                list.innerHTML = '<li><p class="text-gray-500">No links found.</p></li>';
+                return;
+            }
+
+            links.forEach(link => {
+                const item = document.createElement('li');
+                item.className = 'border-b pb-2';
+                item.innerHTML = `<a href="${link.link}" target="_blank" class="text-teal-600 hover:underline">${link.title}</a>`;
+                list.appendChild(item);
+            });
         }
 
         function renderDashboard(students) {
@@ -448,6 +630,7 @@
                                 <span><i class="ph-calendar-blank mr-1"></i> ${formatDate(opp.date)}</span>
                                 <span><i class="ph-clock mr-1"></i> ${opp.time}</span>
                                 <span><i class="ph-map-pin mr-1"></i> ${opp.location}</span>
+                                <span><i class="ph-star mr-1"></i> Semester: ${opp.semester}</span>
                             </div>
                         </div>
                         <div class="mt-4 md:mt-0 md:ml-6 flex-shrink-0 text-right">
@@ -469,6 +652,7 @@
 
             // Get current filter values
             const eventFilterValue = document.getElementById('filter-event').value;
+            const semesterFilter = document.getElementById('filter-semester').value;
             const timeFilter = document.getElementById('filter-time').value;
             const hoursFilter = parseInt(document.getElementById('filter-hours').value, 10);
             const locationFilter = document.getElementById('filter-location').value;
@@ -477,6 +661,9 @@
             // Apply filters
             if (eventFilterValue !== 'all') {
                 filteredOpportunities = filteredOpportunities.filter(opp => opp.eventid === eventFilterValue);
+            }
+            if (semesterFilter !== 'all') {
+                filteredOpportunities = filteredOpportunities.filter(opp => String(opp.semester) === semesterFilter);
             }
             if (timeFilter !== 'All') {
                 filteredOpportunities = filteredOpportunities.filter(opp => opp.timeOfDay === timeFilter);
@@ -519,23 +706,44 @@
             });
         }
 
-        function renderMySignups(signups, progress) {
+        function renderMySignups(progress) {
             const mySignupsContainer = document.getElementById('my-signups-content');
             mySignupsContainer.innerHTML = `
                 <div class="bg-white p-6 rounded-lg shadow mb-8">
-                    <h3 class="text-lg font-semibold text-gray-800">Your Progress</h3>
-                    <div class="mt-4">
-                        <div class="flex justify-between mb-1">
-                            <span class="text-base font-medium text-teal-700">Completed Hours</span>
-                            <span class="text-sm font-medium text-teal-700" id="progress-text">0 of 0 hours</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">Semester 1 Progress</h3>
+                            <div class="mt-4">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-base font-medium text-teal-700">Completed Hours</span>
+                                    <span class="text-sm font-medium text-teal-700" id="progress-text-s1">0 of 0 hours</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-4 relative">
+                                    <div id="progress-bar-s1-inprogress" class="bg-orange-400 h-4 rounded-full" style="width: 0%"></div>
+                                    <div id="progress-bar-s1-completed" class="bg-teal-600 h-4 rounded-full absolute top-0 left-0" style="width: 0%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                                     <span id="in-progress-text-s1">0 hours in progress</span>
+                                     <span id="penalty-text-s1" class="text-red-600 font-semibold"></span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-4 relative">
-                            <div id="progress-bar-inprogress" class="bg-orange-400 h-4 rounded-full" style="width: 0%"></div>
-                            <div id="progress-bar-completed" class="bg-teal-600 h-4 rounded-full absolute top-0 left-0" style="width: 0%"></div>
-                        </div>
-                        <div class="flex justify-between text-xs text-gray-500 mt-2">
-                             <span id="in-progress-text">0 hours in progress</span>
-                             <span id="penalty-text" class="text-red-600 font-semibold"></span>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">Semester 2 Progress</h3>
+                            <div class="mt-4">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-base font-medium text-teal-700">Completed Hours</span>
+                                    <span class="text-sm font-medium text-teal-700" id="progress-text-s2">0 of 0 hours</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-4 relative">
+                                    <div id="progress-bar-s2-inprogress" class="bg-orange-400 h-4 rounded-full" style="width: 0%"></div>
+                                    <div id="progress-bar-s2-completed" class="bg-teal-600 h-4 rounded-full absolute top-0 left-0" style="width: 0%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                                     <span id="in-progress-text-s2">0 hours in progress</span>
+                                     <span id="penalty-text-s2" class="text-red-600 font-semibold"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -552,25 +760,37 @@
                 </div>
             `;
             
+            if (progress) {
+                // Semester 1
+                const s1 = progress.semester1;
+                const s1_req = s1.required || 0;
+                const s1_completed_p = s1_req > 0 ? (s1.completed / s1_req) * 100 : 0;
+                const s1_inprogress_p = s1_req > 0 ? (s1.inProgress / s1_req) * 100 : 0;
+                document.getElementById('progress-bar-s1-completed').style.width = `${Math.min(s1_completed_p, 100)}%`;
+                document.getElementById('progress-bar-s1-inprogress').style.width = `${Math.min(s1_completed_p + s1_inprogress_p, 100)}%`;
+                document.getElementById('progress-text-s1').textContent = `${s1.completed} of ${s1_req} hours`;
+                document.getElementById('in-progress-text-s1').textContent = `${s1.inProgress || 0} hours in progress`;
+                document.getElementById('penalty-text-s1').textContent = s1.penalty > 0 ? `+ ${s1.penalty} penalty hours` : '';
+                
+                // Semester 2
+                const s2 = progress.semester2;
+                const s2_req = s2.required || 0;
+                const s2_completed_p = s2_req > 0 ? (s2.completed / s2_req) * 100 : 0;
+                const s2_inprogress_p = s2_req > 0 ? (s2.inProgress / s2_req) * 100 : 0;
+                document.getElementById('progress-bar-s2-completed').style.width = `${Math.min(s2_completed_p, 100)}%`;
+                document.getElementById('progress-bar-s2-inprogress').style.width = `${Math.min(s2_completed_p + s2_inprogress_p, 100)}%`;
+                document.getElementById('progress-text-s2').textContent = `${s2.completed} of ${s2_req} hours`;
+                document.getElementById('in-progress-text-s2').textContent = `${s2.inProgress || 0} hours in progress`;
+                document.getElementById('penalty-text-s2').textContent = s2.penalty > 0 ? `+ ${s2.penalty} penalty hours` : '';
+            }
+        }
+
+        function renderMySignupsList(signups) {
             const upcomingList = document.getElementById('upcoming-signups-list');
             const completedList = document.getElementById('completed-signups-list');
-            const completedBar = document.getElementById('progress-bar-completed');
-            const inProgressBar = document.getElementById('progress-bar-inprogress');
-            const progressText = document.getElementById('progress-text');
-            const inProgressText = document.getElementById('in-progress-text');
-            const penaltyText = document.getElementById('penalty-text');
-
-            if (progress) {
-                const completedPercentage = (progress.completed / progress.totalRequired) * 100;
-                const inProgressPercentage = (progress.inProgress / progress.totalRequired) * 100;
-                
-                completedBar.style.width = `${Math.min(completedPercentage, 100)}%`;
-                inProgressBar.style.width = `${Math.min(completedPercentage + inProgressPercentage, 100)}%`;
-                
-                progressText.textContent = `${progress.completed} of ${progress.totalRequired} hours`;
-                inProgressText.textContent = `${progress.inProgress || 0} hours in progress`;
-                penaltyText.textContent = progress.penalty > 0 ? `+ ${progress.penalty} penalty hours` : '';
-            }
+            
+            upcomingList.innerHTML = '';
+            completedList.innerHTML = '';
 
             const upcomingSignups = signups.filter(s => s.status === 'In Progress');
             const pastSignups = signups.filter(s => s.status === 'Completed' || s.status === 'Penalty' || s.status === 'Withdrawn');
@@ -864,8 +1084,14 @@
 
         // --- INITIALIZATION ---
         window.onload = function() {
-            fetchData();
-            addEventListeners();
+            google.accounts.id.initialize({
+              client_id: CLIENT_ID,
+              callback: handleCredentialResponse
+            });
+            google.accounts.id.renderButton(
+              document.getElementById('google-signin-button-container'),
+              { theme: "outline", size: "large" } 
+            );
         };
     </script>
 </body>
