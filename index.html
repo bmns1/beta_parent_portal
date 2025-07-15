@@ -904,7 +904,7 @@
                         method: 'POST',
                         mode: 'no-cors',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ action: 'withdraw', signupId: signupId, parentEmail: PARENT_EMAIL })
+                        body: JSON.stringify({ action: 'withdraw', signupId: signupId, token: ID_TOKEN })
                     })
                     .then(() => {
                        alert('Withdrawal successful! The portal will now refresh.');
@@ -965,7 +965,7 @@
                         method: 'POST',
                         mode: 'no-cors', 
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ action: 'signup', opportunityId: opportunityId, parentEmail: PARENT_EMAIL })
+                        body: JSON.stringify({ action: 'signup', opportunityId: opportunityId, token: ID_TOKEN })
                     })
                     .then(() => {
                        alert('Signup successful! The portal will now refresh to show your updated signups.');
@@ -1096,5 +1096,3 @@
     </script>
 </body>
 </html>
-
-
