@@ -20,7 +20,7 @@
         <div class="text-center p-8 bg-white rounded-lg shadow-lg">
              <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-24 w-auto mx-auto mb-4">
             <h1 class="text-2xl font-bold text-gray-800">Admin Portal</h1>
-            <p class="text-gray-600 mb-8">Please sign in with your admin account :)).</p>
+            <p class="text-gray-600 mb-8">Please sign in with your admin account.</p>
             <div id="google-signin-button-container" class="flex justify-center"></div>
         </div>
     </div>
@@ -180,8 +180,7 @@
         </main>
     </div>
     <script>
-        const MAIN_WEB_APP_URL = 'https://script.google.com/a/macros/svaschool.org/s/AKfycbxDwqBfxgKMEnL9OoOJ-2OkT3yn66kam9Tzgfgl1IZ5vKZwdIM85uDdwvMeNvrO5va9/exec';
-        const EXPENSE_WEB_APP_URL = 'https://script.google.com/a/macros/svaschool.org/s/AKfycbxDwqBfxgKMEnL9OoOJ-2OkT3yn66kam9Tzgfgl1IZ5vKZwdIM85uDdwvMeNvrO5va9/exec';
+        const ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxDwqBfxgKMEnL9OoOJ-2OkT3yn66kam9Tzgfgl1IZ5vKZwdIM85uDdwvMeNvrO5va9/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
         let adminDataCache = {};
@@ -194,15 +193,15 @@
         }
 
         function fetchAdminData() {
-            // Fetch main data (signups, opportunities, progress)
-            fetch(`${MAIN_WEB_APP_URL}?token=${ID_TOKEN}`)
+            fetch(`${ADMIN_WEB_APP_URL}?token=${ID_TOKEN}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.status === 'success' && data.role === 'admin') {
-                        adminDataCache = data;
-                        renderSignupsTable(data.allSignups, data.allOpportunities);
-                        renderOpportunitiesTable(data.allOpportunities);
-                        populateEventDropdown(data.allEvents);
+                    if (data.status === 'success') {
+                        adminDataCache = data.data;
+                        renderSignupsTable(adminDataCache.allSignups, adminDataCache.allOpportunities);
+                        renderOpportunitiesTable(adminDataCache.allOpportunities);
+                        populateEventDropdown(adminDataCache.allEvents);
+                        renderExpensesTable(adminDataCache.allExpenses);
                     } else {
                         const base64Url = ID_TOKEN.split('.')[1];
                         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -213,23 +212,12 @@
                         document.body.innerHTML = `<div class="p-8 text-center">
                                                     <h1 class="text-2xl font-bold text-red-600">Access Denied</h1>
                                                     <p class="mt-2 text-gray-700">The email <strong class="font-semibold">${profile.email}</strong> is not authorized as an administrator.</p>
-                                                    <p class="mt-1 text-sm text-gray-500">Please ensure this email is listed in the 'Admin' sheet.</p>
+                                                    <p class="mt-1 text-sm text-gray-500">Please check the 'Admin' sheet for typos or extra spaces.</p>
                                                     <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md text-left">
                                                         <p class="font-semibold text-red-800">Backend Error Message:</p>
                                                         <p class="text-red-700 text-sm font-mono">${data.error || "No specific error message returned from backend."}</p>
                                                     </div>
                                                 </div>`;
-                    }
-                });
-
-            // Fetch expense data
-            fetch(`${EXPENSE_WEB_APP_URL}?token=${ID_TOKEN}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        renderExpensesTable(data.data);
-                    } else {
-                        console.error("Could not load expenses:", data.error);
                     }
                 });
         }
@@ -440,7 +428,7 @@
                     button.textContent = 'Updating...';
                     button.disabled = true;
 
-                    fetch(MAIN_WEB_APP_URL, {
+                    fetch(ADMIN_WEB_APP_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ action: (action === 'Remove' ? 'removeSignup' : 'updateSignupStatus'), signupId, newStatus: action, token: ID_TOKEN })
@@ -476,7 +464,7 @@
                     event: document.getElementById('report-event').value
                 };
 
-                fetch(EXPENSE_WEB_APP_URL, {
+                fetch(ADMIN_WEB_APP_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'reportExpense', data: expenseData, token: ID_TOKEN })
