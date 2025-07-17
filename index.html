@@ -20,7 +20,7 @@
         <div class="text-center p-8 bg-white rounded-lg shadow-lg">
              <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-24 w-auto mx-auto mb-4">
             <h1 class="text-2xl font-bold text-gray-800">Admin Portal</h1>
-            <p class="text-gray-600 mb-8">Please sign in with your admin account :).</p>
+            <p class="text-gray-600 mb-8">Please sign in with your admin account :)).</p>
             <div id="google-signin-button-container" class="flex justify-center"></div>
         </div>
     </div>
@@ -210,7 +210,15 @@
                             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
                         }).join(''));
                         const profile = JSON.parse(jsonPayload);
-                        document.body.innerHTML = `<div class="p-8 text-center text-red-600">Access Denied for ${profile.email}. You must be an administrator to view this page. Please check the 'Admin' sheet.</div>`;
+                        document.body.innerHTML = `<div class="p-8 text-center">
+                                                    <h1 class="text-2xl font-bold text-red-600">Access Denied</h1>
+                                                    <p class="mt-2 text-gray-700">The email <strong class="font-semibold">${profile.email}</strong> is not authorized as an administrator.</p>
+                                                    <p class="mt-1 text-sm text-gray-500">Please ensure this email is listed in the 'Admin' sheet.</p>
+                                                    <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md text-left">
+                                                        <p class="font-semibold text-red-800">Backend Error Message:</p>
+                                                        <p class="text-red-700 text-sm font-mono">${data.error || "No specific error message returned from backend."}</p>
+                                                    </div>
+                                                </div>`;
                     }
                 });
 
