@@ -216,29 +216,16 @@
         }
 
         function fetchAdminData() {
-            console.log("1. Starting fetchAdminData with token:", ID_TOKEN);
             fetch(`${ADMIN_WEB_APP_URL}?token=${ID_TOKEN}`)
-                .then(res => {
-                    console.log("2. Received response from backend:", res);
-                    if (!res.ok) {
-                        throw new Error(`HTTP error! status: ${res.status}`);
-                    }
-                    return res.json();
-                })
+                .then(res => res.json())
                 .then(data => {
-                    console.log("3. Parsed JSON data from backend:", data);
-
                     if (data.status === 'success') {
-                        console.log("4. Backend status is 'success'. Populating cache.");
                         adminDataCache = data.data;
-                        console.log("5. adminDataCache populated:", adminDataCache);
-
                         renderSignupsTable(adminDataCache.allSignups, adminDataCache.allOpportunities);
                         renderOpportunitiesTable(adminDataCache.allOpportunities);
                         renderEventsTable(adminDataCache.allEvents);
                         populateEventDropdown(adminDataCache.allEvents);
                         renderExpensesTable(adminDataCache.allExpenses);
-                        console.log("6. All render functions called.");
                     } else {
                         const base64Url = ID_TOKEN.split('.')[1];
                         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -256,10 +243,6 @@
                                                     </div>
                                                 </div>`;
                     }
-                })
-                .catch(error => {
-                    console.error('CRITICAL FETCH ERROR:', error);
-                    document.body.innerHTML = `<div class="p-8 text-center text-red-600">A critical error occurred while fetching data. Please check the console for details.</div>`;
                 });
         }
 
