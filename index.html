@@ -20,7 +20,7 @@
         <div class="text-center p-8 bg-white rounded-lg shadow-lg">
              <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-24 w-auto mx-auto mb-4">
             <h1 class="text-2xl font-bold text-gray-800">Admin Portal</h1>
-            <p class="text-gray-600 mb-8">Please sign in with your admin account.</p>
+            <p class="text-gray-600 mb-8">Please sign in with your admin account :).</p>
             <div id="google-signin-button-container" class="flex justify-center"></div>
         </div>
     </div>
@@ -204,7 +204,13 @@
                         renderOpportunitiesTable(data.allOpportunities);
                         populateEventDropdown(data.allEvents);
                     } else {
-                        document.body.innerHTML = `<div class="p-8 text-center text-red-600">Access Denied. You must be an administrator to view this page.</div>`;
+                        const base64Url = ID_TOKEN.split('.')[1];
+                        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                        }).join(''));
+                        const profile = JSON.parse(jsonPayload);
+                        document.body.innerHTML = `<div class="p-8 text-center text-red-600">Access Denied for ${profile.email}. You must be an administrator to view this page. Please check the 'Admin' sheet.</div>`;
                     }
                 });
 
