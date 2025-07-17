@@ -68,6 +68,7 @@
                 <div class="bg-white p-6 rounded-lg shadow">
                     <h2 class="text-xl font-semibold mb-4">Family Volunteer Progress</h2>
                     
+                    <!-- Search Filter -->
                     <div class="mb-6">
                         <label for="family-email-search" class="block text-sm font-medium text-gray-700">Search by Parent Email</label>
                         <div class="mt-1 flex rounded-md shadow-sm">
@@ -78,11 +79,15 @@
                         </div>
                     </div>
 
+                    <!-- Progress Summary -->
                     <div id="progress-summary-container" class="hidden grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                        <!-- Semester 1 Progress -->
                         <div id="semester-1-progress"></div>
+                        <!-- Semester 2 Progress -->
                         <div id="semester-2-progress"></div>
                     </div>
 
+                    <!-- Signups Table -->
                     <div class="overflow-x-auto">
                         <h3 class="text-lg font-semibold mb-4">All Signups</h3>
                         <table class="min-w-full divide-y divide-gray-200">
@@ -197,14 +202,6 @@
         </main>
     </div>
 
-    <!-- Modals for editing/adding -->
-    <div id="opportunity-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <!-- Opportunity Modal Content -->
-    </div>
-    <div id="event-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-       <!-- Event Modal Content -->
-    </div>
-
     <script>
         const ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxDwqBfxgKMEnL9OoOJ-2OkT3yn66kam9Tzgfgl1IZ5vKZwdIM85uDdwvMeNvrO5va9/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
@@ -219,16 +216,29 @@
         }
 
         function fetchAdminData() {
+            console.log("1. Starting fetchAdminData with token:", ID_TOKEN);
             fetch(`${ADMIN_WEB_APP_URL}?token=${ID_TOKEN}`)
-                .then(res => res.json())
+                .then(res => {
+                    console.log("2. Received response from backend:", res);
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.json();
+                })
                 .then(data => {
+                    console.log("3. Parsed JSON data from backend:", data);
+
                     if (data.status === 'success') {
+                        console.log("4. Backend status is 'success'. Populating cache.");
                         adminDataCache = data.data;
+                        console.log("5. adminDataCache populated:", adminDataCache);
+
                         renderSignupsTable(adminDataCache.allSignups, adminDataCache.allOpportunities);
                         renderOpportunitiesTable(adminDataCache.allOpportunities);
                         renderEventsTable(adminDataCache.allEvents);
                         populateEventDropdown(adminDataCache.allEvents);
                         renderExpensesTable(adminDataCache.allExpenses);
+                        console.log("6. All render functions called.");
                     } else {
                         const base64Url = ID_TOKEN.split('.')[1];
                         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -246,6 +256,10 @@
                                                     </div>
                                                 </div>`;
                     }
+                })
+                .catch(error => {
+                    console.error('CRITICAL FETCH ERROR:', error);
+                    document.body.innerHTML = `<div class="p-8 text-center text-red-600">A critical error occurred while fetching data. Please check the console for details.</div>`;
                 });
         }
 
