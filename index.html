@@ -19,6 +19,8 @@
         }
         .modal { display: none; }
         .modal.flex { display: flex; }
+        .tab-content { display: none; }
+        .tab-content-active { display: block; }
     </style>
 </head>
 <body class="antialiased">
@@ -61,6 +63,9 @@
                         <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="volunteering">
                             <i class="ph-hands-clapping-fill mr-3"></i> Volunteering
                         </a>
+                        <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="signups-admin">
+                            <i class="ph-user-list-fill mr-3"></i> Signed Up Families
+                        </a>
                         <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="expenses">
                             <i class="ph-receipt-fill mr-3"></i> PTO Expenses
                         </a>
@@ -83,6 +88,7 @@
                     <div id="dashboard" class="tab-content tab-content-active"></div>
                     <div id="events" class="tab-content"></div>
                     <div id="volunteering" class="tab-content"></div>
+                    <div id="signups-admin" class="tab-content"></div>
                     <div id="expenses" class="tab-content"></div>
                     <div id="progress" class="tab-content"></div>
                 </main>
@@ -142,6 +148,7 @@
             renderDashboard();
             renderEventsTab();
             renderVolunteeringTab();
+            renderSignupsTab();
             renderExpensesTab();
             renderFamilyProgressTab();
         }
@@ -222,6 +229,52 @@
                     </table>
                 </div>
             </div>`;
+        }
+        
+        function renderSignupsTab() {
+            const container = document.getElementById('signups-admin');
+            const eventOptions = adminData.events.map(event => `<option value="${event.eventid}">${event.eventname}</option>`).join('');
+
+            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Signed Up Families</h2>
+                    <select id="signup-event-filter" class="w-1/3 rounded-md border-gray-300 shadow-sm">
+                        <option value="all">All Events</option>
+                        ${eventOptions}
+                    </select>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50"><tr>
+                            <th class="py-3 px-4">Family ID</th><th class="py-3 px-4">Parent Email</th><th class="py-3 px-4">Task</th><th class="py-3 px-4">Status</th>
+                        </tr></thead>
+                        <tbody id="signups-tbody"></tbody>
+                    </table>
+                </div>
+            </div>`;
+            renderSignupsTable('all');
+        }
+
+        function renderSignupsTable(eventId) {
+            const tbody = document.getElementById('signups-tbody');
+            const oppMap = adminData.volunteering.reduce((map, opp) => {
+                map[opp.opportunityid] = opp;
+                return map;
+            }, {});
+
+            const filteredSignups = (eventId === 'all')
+                ? adminData.signups
+                : adminData.signups.filter(s => oppMap[s.opportunityid]?.eventid === eventId);
+
+            tbody.innerHTML = filteredSignups.map(signup => {
+                const opp = oppMap[signup.opportunityid];
+                return `<tr class="border-b">
+                    <td class="py-3 px-4 font-mono">${signup.familyid}</td>
+                    <td class="py-3 px-4">${signup.parentemail}</td>
+                    <td class="py-3 px-4">${opp ? opp.title : 'N/A'}</td>
+                    <td class="py-3 px-4">${signup.status}</td>
+                </tr>`;
+            }).join('');
         }
 
         function renderExpensesTab() {
@@ -326,6 +379,13 @@
                         const familyId = row.dataset.familyId.toLowerCase();
                         row.style.display = familyId.includes(searchTerm) ? '' : 'none';
                     });
+                });
+            }
+            
+            const signupEventFilter = document.getElementById('signup-event-filter');
+            if(signupEventFilter) {
+                signupEventFilter.addEventListener('change', e => {
+                    renderSignupsTable(e.target.value);
                 });
             }
         }
