@@ -363,11 +363,8 @@
                     document.getElementById('page-title').textContent = link.textContent.trim();
                     document.querySelectorAll('.tab-content').forEach(c => {
                         c.classList.remove('tab-content-active');
-                        c.style.display = 'none'; // Ensure it's hidden
                     });
-                    const activeTab = document.getElementById(tabId);
-                    activeTab.classList.add('tab-content-active');
-                    activeTab.style.display = 'block'; // Ensure it's visible
+                    document.getElementById(tabId).classList.add('tab-content-active');
                 }
             });
 
