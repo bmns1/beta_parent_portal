@@ -301,14 +301,20 @@
         // --- EVENT LISTENERS ---
         function addEventListeners() {
             document.getElementById('sidebar-nav').addEventListener('click', e => {
-                if (e.target.matches('.sidebar-link')) {
+                const link = e.target.closest('.sidebar-link');
+                if (link) {
                     e.preventDefault();
                     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                    e.target.classList.add('active');
-                    const tabId = e.target.dataset.tab;
-                    document.getElementById('page-title').textContent = e.target.textContent.trim();
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content-active'));
-                    document.getElementById(tabId).classList.add('tab-content-active');
+                    link.classList.add('active');
+                    const tabId = link.dataset.tab;
+                    document.getElementById('page-title').textContent = link.textContent.trim();
+                    document.querySelectorAll('.tab-content').forEach(c => {
+                        c.classList.remove('tab-content-active');
+                        c.style.display = 'none'; // Ensure it's hidden
+                    });
+                    const activeTab = document.getElementById(tabId);
+                    activeTab.classList.add('tab-content-active');
+                    activeTab.style.display = 'block'; // Ensure it's visible
                 }
             });
 
@@ -345,5 +351,3 @@
 
 </body>
 </html>
-
-
