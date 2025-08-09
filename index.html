@@ -7,547 +7,174 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/phosphor-icons"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .admin-tab-active {
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb; /* A lighter gray for admin */
+        }
+        .sidebar-link.active {
             background-color: #0d9488; /* teal-600 */
             color: white;
         }
-        .modal {
-            transition: opacity 0.25s ease;
-        }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div id="login-screen" class="min-h-screen flex items-center justify-center">
-        <div class="text-center p-8 bg-white rounded-lg shadow-lg">
-             <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-24 w-auto mx-auto mb-4">
-            <h1 class="text-2xl font-bold text-gray-800">Admin Portal</h1>
-            <p class="text-gray-600 mb-8">Please sign in with your admin account.</p>
+<body class="antialiased">
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-100">
+        <div class="text-center p-8 bg-white rounded-lg shadow-lg max-w-sm w-full">
+            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
+            <h1 class="text-2xl font-bold text-gray-800">SVA Admin Portal</h1>
+            <p class="text-gray-600 mb-6">Please sign in with an authorized admin account.</p>
             <div id="google-signin-button-container" class="flex justify-center"></div>
         </div>
     </div>
 
-    <div id="admin-portal-container" class="min-h-screen hidden">
-        <!-- Header -->
-        <header class="bg-white shadow-md">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-20">
-                    <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-                    <a href="index.html" class="text-sm font-medium text-teal-600 hover:text-teal-800">Return to Parent Portal</a>
-                </div>
-            </div>
-        </header>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-50 hidden">
+        <div class="text-center">
+            <i class="ph-spinner-gap text-6xl text-teal-600 mx-auto animate-spin"></i>
+            <h2 class="text-2xl font-semibold text-gray-700 mt-4">Loading Admin Data...</h2>
+        </div>
+    </div>
 
-        <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <!-- Admin Tabs -->
-            <div class="mb-8">
-                <div class="sm:hidden">
-                    <label for="tabs" class="sr-only">Select a tab</label>
-                    <select id="tabs" name="tabs" class="block w-full focus:ring-teal-500 focus:border-teal-500 border-gray-300 rounded-md">
-                        <option data-tab="signups">Family Signups/Progress</option>
-                        <option data-tab="opportunities">Volunteer Opportunities</option>
-                        <option data-tab="events">Events</option>
-                        <option data-tab="expenses">PTO Expenses</option>
-                        <option data-tab="report">Report Expenses/Donation</option>
-                    </select>
+    <!-- Main Admin Portal (Initially Hidden) -->
+    <div id="portal-container" class="hidden">
+        <div class="flex h-screen bg-gray-100">
+            <!-- Sidebar -->
+            <div class="hidden md:flex flex-col w-64 bg-gray-800 text-white">
+                <div class="flex items-center justify-center h-20 border-b border-gray-700">
+                    <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-12 w-auto">
+                    <span class="ml-3 font-semibold text-xl">Admin Portal</span>
                 </div>
-                <div class="hidden sm:block">
-                    <nav class="flex space-x-4" aria-label="Tabs">
-                        <button class="admin-tab-btn admin-tab-active px-3 py-2 font-medium text-sm rounded-md" data-tab="signups">Family Signups/Progress</button>
-                        <button class="admin-tab-btn text-gray-500 hover:text-gray-700 px-3 py-2 font-medium text-sm rounded-md" data-tab="opportunities">Volunteer Opportunities</button>
-                        <button class="admin-tab-btn text-gray-500 hover:text-gray-700 px-3 py-2 font-medium text-sm rounded-md" data-tab="events">Events</button>
-                        <button class="admin-tab-btn text-gray-500 hover:text-gray-700 px-3 py-2 font-medium text-sm rounded-md" data-tab="expenses">PTO Expenses</button>
-                        <button class="admin-tab-btn text-gray-500 hover:text-gray-700 px-3 py-2 font-medium text-sm rounded-md" data-tab="report">Report Expenses/Donation</button>
+                <div class="flex-grow">
+                    <nav class="mt-10">
+                        <a href="#" class="sidebar-link active flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="dashboard">
+                            <i class="ph-gauge-fill mr-3"></i> Dashboard
+                        </a>
+                        <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="volunteers">
+                            <i class="ph-users-fill mr-3"></i> Volunteers
+                        </a>
                     </nav>
                 </div>
+                <div id="user-info-sidebar" class="p-4 border-t border-gray-700"></div>
             </div>
 
-            <!-- Tab Content -->
-            <div id="signups" class="admin-tab-content">
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold mb-4">Family Volunteer Progress</h2>
-                    
-                    <!-- Search Filter -->
-                    <div class="mb-6">
-                        <label for="family-email-search" class="block text-sm font-medium text-gray-700">Search by Parent Email</label>
-                        <div class="mt-1 flex rounded-md shadow-sm">
-                            <input type="email" id="family-email-search" class="focus:ring-teal-500 focus:border-teal-500 flex-1 block w-full rounded-none rounded-l-md sm:text-sm border-gray-300" placeholder="parent@email.com">
-                            <button id="search-family-btn" type="button" class="-ml-px relative inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500">
-                                <span>Search</span>
-                            </button>
-                        </div>
+            <!-- Main Content -->
+            <div class="flex flex-col flex-1 overflow-y-auto">
+                <div class="flex items-center justify-between h-20 bg-white border-b px-6">
+                    <div class="md:hidden">
+                        <button id="mobile-menu-button" class="text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600">
+                            <i class="ph-list text-2xl"></i>
+                        </button>
                     </div>
-
-                    <!-- Progress Summary -->
-                    <div id="progress-summary-container" class="hidden grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-                        <!-- Semester 1 Progress -->
-                        <div id="semester-1-progress"></div>
-                        <!-- Semester 2 Progress -->
-                        <div id="semester-2-progress"></div>
-                    </div>
-
-                    <!-- Signups Table -->
-                    <div class="overflow-x-auto">
-                        <h3 class="text-lg font-semibold mb-4">All Signups</h3>
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parent Email</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opportunity</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="signups-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
+                    <h1 id="page-title" class="text-2xl font-semibold text-gray-800">Dashboard</h1>
+                    <button onclick="signOut();" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">Sign Out</button>
                 </div>
-            </div>
-            <div id="opportunities" class="admin-tab-content hidden">
-                 <div class="bg-white p-6 rounded-lg shadow mb-8">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold">Manage Volunteering Opportunities</h2>
-                        <button id="add-opportunity-btn" class="bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700">Create New Opportunity</button>
+                
+                <main class="p-6 sm:p-10 space-y-6">
+                    <div id="dashboard" class="tab-content tab-content-active">
+                        <!-- Dashboard content will be rendered here -->
                     </div>
-                    <div class="overflow-x-auto mb-6">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spots Filled</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="opportunities-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
+                    <div id="volunteers" class="tab-content">
+                        <!-- Volunteer management content will be rendered here -->
                     </div>
-                </div>
+                </main>
             </div>
-            <div id="events" class="admin-tab-content hidden">
-                 <div class="bg-white p-6 rounded-lg shadow mb-8">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold">Manage Events</h2>
-                        <button id="add-event-btn" class="bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700">Create New Event</button>
-                    </div>
-                    <div class="overflow-x-auto mb-6">
-                        <table class="min-w-full divide-y divide-gray-200">
-                           <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="events-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div id="expenses" class="admin-tab-content hidden">
-                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold mb-4">PTO Expenses & Donations</h2>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted By</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="expenses-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div id="report" class="admin-tab-content hidden">
-                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold mb-4">Report Expense or Donation</h2>
-                    <form id="report-expense-form" class="space-y-4">
-                        <div>
-                            <label for="report-category" class="block text-sm font-medium text-gray-700">Category</label>
-                            <select id="report-category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                <option value="">Select a category...</option>
-                                <option>Event Supplies</option>
-                                <option>Classroom Materials</option>
-                                <option>Donation</option>
-                                <option>Other</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="report-event" class="block text-sm font-medium text-gray-700">Related Event (Optional)</label>
-                             <select id="report-event" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                <option value="">None</option>
-                                <!-- Event options will be populated by JS -->
-                            </select>
-                        </div>
-                        <div>
-                            <label for="report-description" class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea id="report-description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></textarea>
-                        </div>
-                        <div>
-                            <label for="report-amount" class="block text-sm font-medium text-gray-700">Amount</label>
-                            <input type="number" step="0.01" id="report-amount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                            <p class="text-xs text-gray-500 mt-1">Enter a negative number for expenses (e.g., -50.00) and a positive number for donations.</p>
-                        </div>
-                        <button type="submit" class="w-full bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700">Submit Report</button>
-                    </form>
-                </div>
-            </div>
-        </main>
+        </div>
     </div>
 
     <script>
-        const ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxDwqBfxgKMEnL9OoOJ-2OkT3yn66kam9Tzgfgl1IZ5vKZwdIM85uDdwvMeNvrO5va9/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxVvYA3ivr1rYfDN-5EPUes4wvCu8a-OoeiZ7AIY4goS8aRKAnMeWYN68-8QVHT9CT9/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
-        let adminDataCache = {};
+        let adminData = {};
 
-        function handleAdminSignIn(response) {
+        // --- GOOGLE SIGN-IN ---
+        function handleCredentialResponse(response) {
             ID_TOKEN = response.credential;
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('admin-portal-container').classList.remove('hidden');
-            fetchAdminData();
+            const profile = JSON.parse(atob(ID_TOKEN.split('.')[1]));
+            
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('loading-overlay').classList.remove('hidden');
+
+            const userInfoHtml = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${profile.picture}" alt=""><div class="ml-3"><div class="text-sm font-medium">${profile.name}</div><div class="text-xs text-gray-400">${profile.email}</div></div></div>`;
+            document.getElementById('user-info-sidebar').innerHTML = userInfoHtml;
+
+            fetchAdminData(ID_TOKEN);
         }
 
-        function fetchAdminData() {
-            fetch(`${ADMIN_WEB_APP_URL}?token=${ID_TOKEN}`)
-                .then(res => res.json())
+        function signOut() {
+            google.accounts.id.disableAutoSelect();
+            window.location.reload();
+        }
+
+        // --- DATA FETCH & RENDER ---
+        function fetchAdminData(token) {
+            fetch(`${WEB_APP_URL}?token=${token}&role=admin`)
+                .then(response => response.json())
                 .then(data => {
-                    if (data.status === 'success') {
-                        adminDataCache = data.data;
-                        renderSignupsTable(adminDataCache.allSignups, adminDataCache.allOpportunities);
-                        renderOpportunitiesTable(adminDataCache.allOpportunities);
-                        renderEventsTable(adminDataCache.allEvents);
-                        populateEventDropdown(adminDataCache.allEvents);
-                        renderExpensesTable(adminDataCache.allExpenses);
-                    } else {
-                        const base64Url = ID_TOKEN.split('.')[1];
-                        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                        }).join(''));
-                        const profile = JSON.parse(jsonPayload);
-                        document.body.innerHTML = `<div class="p-8 text-center">
-                                                    <h1 class="text-2xl font-bold text-red-600">Access Denied</h1>
-                                                    <p class="mt-2 text-gray-700">The email <strong class="font-semibold">${profile.email}</strong> is not authorized as an administrator.</p>
-                                                    <p class="mt-1 text-sm text-gray-500">Please check the 'Admin' sheet for typos or extra spaces.</p>
-                                                    <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md text-left">
-                                                        <p class="font-semibold text-red-800">Backend Error Message:</p>
-                                                        <p class="text-red-700 text-sm font-mono">${data.error || "No specific error message returned from backend."}</p>
-                                                    </div>
-                                                </div>`;
+                    if (data.status !== 'success' || !data.data || !data.data.isAdmin) {
+                        throw new Error(data.error || "Access Denied. This account is not authorized for the admin portal.");
                     }
-                });
-        }
-
-        function renderSignupsTable(signups, opportunities, filterEmail = null) {
-            const tableBody = document.getElementById('signups-table-body');
-            tableBody.innerHTML = '';
-
-            let filteredSignups = signups;
-            if (filterEmail) {
-                filteredSignups = signups.filter(s => s.parentEmail.toLowerCase() === filterEmail.toLowerCase());
-            }
-
-            if (!filteredSignups || filteredSignups.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">No signups found.</td></tr>`;
-                return;
-            }
-
-            filteredSignups.forEach(signup => {
-                const opportunity = opportunities.find(o => o.id === signup.opportunityId);
-                const row = document.createElement('tr');
-                
-                let statusClass = '';
-                if (signup.status === 'Completed') statusClass = 'text-green-600';
-                if (signup.status === 'Penalty' || signup.status === 'Withdrawn') statusClass = 'text-red-600';
-
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${signup.parentEmail}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${opportunity ? opportunity.title : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${statusClass}">${signup.status}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button data-signup-id="${signup.signupId}" data-action="Completed" class="status-btn text-green-600 hover:text-green-900 mr-4">Complete</button>
-                        <button data-signup-id="${signup.signupId}" data-action="Penalty" class="status-btn text-orange-600 hover:text-orange-900 mr-4">Penalty</button>
-                        <button data-signup-id="${signup.signupId}" data-action="Remove" class="status-btn text-red-600 hover:text-red-900">Remove</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        function renderOpportunitiesTable(opportunities) {
-            const tableBody = document.getElementById('opportunities-table-body');
-            tableBody.innerHTML = '';
-            
-            if (!opportunities || opportunities.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">No opportunities found.</td></tr>`;
-                return;
-            }
-
-            opportunities.forEach(opp => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${opp.title}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(opp.date).toLocaleDateString()}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${opp.signedUp} / ${opp.needed}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button data-opp-id="${opp.id}" class="edit-opp-btn text-teal-600 hover:text-teal-900 mr-4">Edit</button>
-                        <button data-opp-id="${opp.id}" class="remove-opp-btn text-red-600 hover:text-red-900">Remove</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        function renderEventsTable(events) {
-            const tableBody = document.getElementById('events-table-body');
-            tableBody.innerHTML = '';
-            
-            if (!events || events.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-gray-500">No events found.</td></tr>`;
-                return;
-            }
-
-            events.forEach(event => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${event.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(event.date).toLocaleDateString()}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button data-event-id="${event.id}" class="edit-event-btn text-teal-600 hover:text-teal-900 mr-4">Edit</button>
-                        <button data-event-id="${event.id}" class="remove-event-btn text-red-600 hover:text-red-900">Remove</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        function renderExpensesTable(expenses) {
-            const tableBody = document.getElementById('expenses-table-body');
-            tableBody.innerHTML = '';
-
-            if (!expenses || expenses.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-gray-500">No expenses or donations found.</td></tr>`;
-                return;
-            }
-
-            expenses.forEach(expense => {
-                const row = document.createElement('tr');
-                const amountColor = expense.amount >= 0 ? 'text-green-600' : 'text-red-600';
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(expense.date).toLocaleDateString()}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${expense.submittedBy}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${expense.description}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${expense.category}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${amountColor}">$${parseFloat(expense.amount).toFixed(2)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${expense.status}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        function populateEventDropdown(events) {
-            const eventDropdown = document.getElementById('report-event');
-            if (!eventDropdown || !events) return;
-
-            const uniqueEvents = new Map();
-            events.forEach(event => {
-                if (event.id && !uniqueEvents.has(event.id)) {
-                    uniqueEvents.set(event.id, event.name);
-                }
-            });
-
-            while (eventDropdown.options.length > 1) {
-                eventDropdown.remove(1);
-            }
-
-            uniqueEvents.forEach((name, id) => {
-                const option = document.createElement('option');
-                option.value = id;
-                option.textContent = name;
-                eventDropdown.appendChild(option);
-            });
-        }
-
-        function renderFamilyProgress(email) {
-            const container = document.getElementById('progress-summary-container');
-            const progressData = adminDataCache.allParentsProgress[email];
-
-            if (!progressData) {
-                container.classList.add('hidden');
-                return;
-            }
-            
-            container.classList.remove('hidden');
-
-            // Semester 1
-            const s1 = progressData.semester1;
-            const s1_req = s1.required || 0;
-            const s1_completed_p = s1_req > 0 ? (s1.completed / s1_req) * 100 : 0;
-            const s1_inprogress_p = s1_req > 0 ? (s1.inProgress / s1_req) * 100 : 0;
-            document.getElementById('semester-1-progress').innerHTML = `
-                <h3 class="text-lg font-semibold text-gray-800">Semester 1 Progress</h3>
-                <div class="mt-4">
-                    <div class="flex justify-between mb-1">
-                        <span class="text-base font-medium text-teal-700">Completed Hours</span>
-                        <span class="text-sm font-medium text-teal-700">${s1.completed} of ${s1_req} hours</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-4 relative">
-                        <div class="bg-orange-400 h-4 rounded-full" style="width: ${Math.min(s1_completed_p + s1_inprogress_p, 100)}%"></div>
-                        <div class="bg-teal-600 h-4 rounded-full absolute top-0 left-0" style="width: ${Math.min(s1_completed_p, 100)}%"></div>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-500 mt-2">
-                         <span>${s1.inProgress || 0} hours in progress</span>
-                         <span class="text-red-600 font-semibold">${s1.penalty > 0 ? `+ ${s1.penalty} penalty hours` : ''}</span>
-                    </div>
-                </div>
-            `;
-            
-            // Semester 2
-            const s2 = progressData.semester2;
-            const s2_req = s2.required || 0;
-            const s2_completed_p = s2_req > 0 ? (s2.completed / s2_req) * 100 : 0;
-            const s2_inprogress_p = s2_req > 0 ? (s2.inProgress / s2_req) * 100 : 0;
-            document.getElementById('semester-2-progress').innerHTML = `
-                 <h3 class="text-lg font-semibold text-gray-800">Semester 2 Progress</h3>
-                <div class="mt-4">
-                    <div class="flex justify-between mb-1">
-                        <span class="text-base font-medium text-teal-700">Completed Hours</span>
-                        <span class="text-sm font-medium text-teal-700">${s2.completed} of ${s2_req} hours</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-4 relative">
-                        <div class="bg-orange-400 h-4 rounded-full" style="width: ${Math.min(s2_completed_p + s2_inprogress_p, 100)}%"></div>
-                        <div class="bg-teal-600 h-4 rounded-full absolute top-0 left-0" style="width: ${Math.min(s2_completed_p, 100)}%"></div>
-                    </div>
-                    <div class="flex justify-between text-xs text-gray-500 mt-2">
-                         <span>${s2.inProgress || 0} hours in progress</span>
-                         <span class="text-red-600 font-semibold">${s2.penalty > 0 ? `+ ${s2.penalty} penalty hours` : ''}</span>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Tab switching logic
-            const tabs = document.querySelectorAll('.admin-tab-btn');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('admin-tab-active'));
-                    tab.classList.add('admin-tab-active');
-                    
-                    document.querySelectorAll('.admin-tab-content').forEach(content => {
-                        content.classList.add('hidden');
-                    });
-                    document.getElementById(tab.dataset.tab).classList.remove('hidden');
-                });
-            });
-
-            // Family search
-            document.getElementById('search-family-btn').addEventListener('click', function() {
-                const email = document.getElementById('family-email-search').value;
-                if (email) {
-                    renderFamilyProgress(email);
-                    renderSignupsTable(adminDataCache.allSignups, adminDataCache.allOpportunities, email);
-                } else {
-                    document.getElementById('progress-summary-container').classList.add('hidden');
-                    renderSignupsTable(adminDataCache.allSignups, adminDataCache.allOpportunities);
-                }
-            });
-
-            // Signup status/remove buttons
-            document.getElementById('signups-table-body').addEventListener('click', function(e) {
-                if (e.target.matches('.status-btn')) {
-                    const button = e.target;
-                    const signupId = button.dataset.signupId;
-                    const action = button.dataset.action;
-                    
-                    if (action === 'Remove') {
-                        if (!confirm('Are you sure you want to permanently remove this signup? This cannot be undone.')) return;
-                    }
-                    
-                    button.textContent = 'Updating...';
-                    button.disabled = true;
-
-                    fetch(ADMIN_WEB_APP_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: (action === 'Remove' ? 'removeSignup' : 'updateSignupStatus'), signupId, newStatus: action, token: ID_TOKEN })
-                    })
-                    .then(res => res.json())
-                    .then(result => {
-                        if (result.status === 'success') {
-                            alert(`Signup ${action.toLowerCase()}ed successfully!`);
-                            fetchAdminData();
-                        } else {
-                            throw new Error(result.error);
-                        }
-                    })
-                    .catch(error => {
-                        alert(`Failed to update signup: ${error.message}`);
-                        button.textContent = action;
-                        button.disabled = false;
-                    });
-                }
-            });
-
-            // Expense form submission
-            document.getElementById('report-expense-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const button = this.querySelector('button[type="submit"]');
-                button.textContent = 'Submitting...';
-                button.disabled = true;
-
-                const expenseData = {
-                    description: document.getElementById('report-description').value,
-                    category: document.getElementById('report-category').value,
-                    amount: document.getElementById('report-amount').value,
-                    event: document.getElementById('report-event').value
-                };
-
-                fetch(ADMIN_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'reportExpense', data: expenseData, token: ID_TOKEN })
+                    adminData = data.data;
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    document.getElementById('portal-container').classList.remove('hidden');
+                    renderDashboard();
+                    renderVolunteerManagement();
+                    addEventListeners();
                 })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.status === 'success') {
-                        alert(result.data.message);
-                        this.reset();
-                        fetchAdminData(); // Refresh data
-                    } else {
-                        throw new Error(result.error);
-                    }
-                })
-                .catch(error => alert(`Failed to report expense: ${error.message}`))
-                .finally(() => {
-                    button.textContent = 'Submit Report';
-                    button.disabled = false;
+                .catch(error => {
+                    console.error('Admin Fetch Error:', error);
+                    document.getElementById('loading-overlay').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg max-w-sm w-full"><img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4"><h1 class="text-xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">${error.message}</p><button onclick="window.location.reload();" class="mt-6 bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Try Again</button></div>`;
+                });
+        }
+
+        function renderDashboard() {
+            const container = document.getElementById('dashboard');
+            // Placeholder for dashboard content
+            container.innerHTML = `<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6"><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Total Families</h3><p class="text-3xl font-bold text-gray-800 mt-2">--</p></div><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Total Volunteer Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">--</p></div><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Upcoming Events</h3><p class="text-3xl font-bold text-gray-800 mt-2">--</p></div><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Open Volunteer Spots</h3><p class="text-3xl font-bold text-gray-800 mt-2">--</p></div></div>`;
+        }
+
+        function renderVolunteerManagement() {
+            const container = document.getElementById('volunteers');
+            // Placeholder for volunteer management table
+            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><h2 class="text-xl font-semibold mb-4">Volunteer Signups</h2><p class="text-gray-600">Volunteer management table will be displayed here.</p></div>`;
+        }
+
+        // --- EVENT LISTENERS ---
+        function addEventListeners() {
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.addEventListener('click', e => {
+                    e.preventDefault();
+                    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    const tabId = link.dataset.tab;
+                    document.getElementById('page-title').textContent = link.textContent;
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content-active'));
+                    document.getElementById(tabId).classList.add('tab-content-active');
                 });
             });
-        });
+        }
 
         // --- INITIALIZATION ---
         window.onload = function() {
-            google.accounts.id.initialize({
-              client_id: CLIENT_ID,
-              callback: handleAdminSignIn
-            });
-            google.accounts.id.renderButton(
-              document.getElementById('google-signin-button-container'),
-              { theme: "outline", size: "large" } 
-            );
+            try {
+                google.accounts.id.initialize({
+                  client_id: CLIENT_ID,
+                  callback: handleCredentialResponse
+                });
+                google.accounts.id.renderButton(
+                  document.getElementById('google-signin-button-container'),
+                  { theme: "outline", size: "large" } 
+                );
+            } catch (error) {
+                console.error("Google Sign-In initialization failed:", error);
+                document.getElementById('login-screen').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg text-red-600"><p>Could not initialize Google Sign-In.</p></div>`;
+            }
         };
     </script>
+
 </body>
 </html>
