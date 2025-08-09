@@ -140,13 +140,74 @@
 
         function renderAllTabs() {
             renderDashboard();
-            // Add other render functions here as they are built
+            renderEventsTab();
+            renderVolunteeringTab();
+            renderExpensesTab();
+            renderFamilyProgressTab();
         }
 
         function renderDashboard() {
             const container = document.getElementById('dashboard');
-            // Placeholder - will be populated with real data later
-            container.innerHTML = `<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6"><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Total Families</h3><p class="text-3xl font-bold text-gray-800 mt-2">${Object.keys(adminData.familyProgress).length}</p></div><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Total Volunteer Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">--</p></div><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Upcoming Events</h3><p class="text-3xl font-bold text-gray-800 mt-2">${adminData.events.length}</p></div><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Open Volunteer Spots</h3><p class="text-3xl font-bold text-gray-800 mt-2">--</p></div></div>`;
+            const totalHours = Object.values(adminData.familyProgress).reduce((sum, family) => {
+                return sum + family.progress.semester1.completed + family.progress.semester2.completed;
+            }, 0);
+            const openSpots = adminData.volunteering.reduce((sum, opp) => {
+                return sum + (opp.neededvolunteers - opp.signedupvolunteers);
+            }, 0);
+
+            container.innerHTML = `<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Total Families</h3><p class="text-3xl font-bold text-gray-800 mt-2">${Object.keys(adminData.familyProgress).length}</p></div>
+                <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Total Volunteer Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${totalHours}</p></div>
+                <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Upcoming Events</h3><p class="text-3xl font-bold text-gray-800 mt-2">${adminData.events.length}</p></div>
+                <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Open Volunteer Spots</h3><p class="text-3xl font-bold text-gray-800 mt-2">${openSpots}</p></div>
+            </div>`;
+        }
+
+        function renderEventsTab() {
+            const container = document.getElementById('events');
+            const tableRows = adminData.events.map(event => `
+                <tr class="border-b">
+                    <td class="py-3 px-4">${event.eventname}</td>
+                    <td class="py-3 px-4">${new Date(event.eventdate).toLocaleDateString()}</td>
+                    <td class="py-3 px-4">${event.grade || 'All'}</td>
+                    <td class="py-3 px-4">${event.classroom || 'All'}</td>
+                    <td class="py-3 px-4">${event.eventid}</td>
+                    <td class="py-3 px-4 text-right">
+                        <button class="text-blue-500 hover:underline mr-4">Edit</button>
+                        <button class="text-red-500 hover:underline">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Manage Events</h2>
+                    <button class="bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700">Create Event</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50"><tr>
+                            <th class="py-3 px-4">Name</th><th class="py-3 px-4">Date</th><th class="py-3 px-4">Grade</th><th class="py-3 px-4">Class</th><th class="py-3 px-4">ID</th><th class="py-3 px-4"></th>
+                        </tr></thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+        }
+
+        function renderVolunteeringTab() {
+            const container = document.getElementById('volunteering');
+             container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><h2 class="text-xl font-semibold mb-4">Manage Volunteering</h2><p>Coming soon...</p></div>`;
+        }
+
+        function renderExpensesTab() {
+            const container = document.getElementById('expenses');
+            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><h2 class="text-xl font-semibold mb-4">PTO Expenses</h2><p>Coming soon...</p></div>`;
+        }
+        
+        function renderFamilyProgressTab() {
+            const container = document.getElementById('progress');
+            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><h2 class="text-xl font-semibold mb-4">Family Progress</h2><p>Coming soon...</p></div>`;
         }
 
         // --- EVENT LISTENERS ---
