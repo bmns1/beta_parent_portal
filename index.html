@@ -152,15 +152,12 @@
                 return sum + family.progress.semester1.completed + family.progress.semester2.completed;
             }, 0);
             const openSpots = adminData.volunteering.reduce((sum, opp) => {
-                return sum + (opp.neededvolunteers - opp.signedupvolunteers);
+                const needed = parseInt(opp.neededvolunteers) || 0;
+                const signedUp = parseInt(opp.signedupvolunteers) || 0;
+                return sum + (needed - signedUp);
             }, 0);
 
-            container.innerHTML = `<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Total Families</h3><p class="text-3xl font-bold text-gray-800 mt-2">${Object.keys(adminData.familyProgress).length}</p></div>
-                <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Total Volunteer Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${totalHours}</p></div>
-                <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Upcoming Events</h3><p class="text-3xl font-bold text-gray-800 mt-2">${adminData.events.length}</p></div>
-                <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Open Volunteer Spots</h3><p class="text-3xl font-bold text-gray-800 mt-2">${openSpots}</p></div>
-            </div>`;
+            container.innerHTML = `<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6"><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Total Families</h3><p class="text-3xl font-bold text-gray-800 mt-2">${Object.keys(adminData.familyProgress).length}</p></div><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Total Volunteer Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${totalHours}</p></div><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Upcoming Events</h3><p class="text-3xl font-bold text-gray-800 mt-2">${adminData.events.length}</p></div><div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">Open Volunteer Spots</h3><p class="text-3xl font-bold text-gray-800 mt-2">${openSpots}</p></div></div>`;
         }
 
         function renderEventsTab() {
@@ -197,17 +194,108 @@
 
         function renderVolunteeringTab() {
             const container = document.getElementById('volunteering');
-             container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><h2 class="text-xl font-semibold mb-4">Manage Volunteering</h2><p>Coming soon...</p></div>`;
+            const tableRows = adminData.volunteering.map(opp => `
+                <tr class="border-b">
+                    <td class="py-3 px-4">${opp.title}</td>
+                    <td class="py-3 px-4">${new Date(opp.date).toLocaleDateString()}</td>
+                    <td class="py-3 px-4">${opp.time}</td>
+                    <td class="py-3 px-4">${opp.signedupvolunteers} / ${opp.neededvolunteers}</td>
+                    <td class="py-3 px-4">${opp.opportunityid}</td>
+                    <td class="py-3 px-4 text-right">
+                        <button class="text-blue-500 hover:underline mr-4">Edit</button>
+                        <button class="text-red-500 hover:underline">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Manage Volunteering</h2>
+                    <button class="bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700">Create Opportunity</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50"><tr>
+                            <th class="py-3 px-4">Title</th><th class="py-3 px-4">Date</th><th class="py-3 px-4">Time</th><th class="py-3 px-4">Spots</th><th class="py-3 px-4">ID</th><th class="py-3 px-4"></th>
+                        </tr></thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
+            </div>`;
         }
 
         function renderExpensesTab() {
             const container = document.getElementById('expenses');
-            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><h2 class="text-xl font-semibold mb-4">PTO Expenses</h2><p>Coming soon...</p></div>`;
+            const tableRows = adminData.expenses.map(exp => `
+                <tr class="border-b">
+                    <td class="py-3 px-4">${new Date(exp.date).toLocaleDateString()}</td>
+                    <td class="py-3 px-4">${exp.submittedby}</td>
+                    <td class="py-3 px-4">${exp.item}</td>
+                    <td class="py-3 px-4">$${parseFloat(exp.amount).toFixed(2)}</td>
+                    <td class="py-3 px-4">${exp.status}</td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `<div class="grid md:grid-cols-3 gap-6">
+                <div class="md:col-span-2 bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Expense History</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-gray-50"><tr>
+                                <th class="py-3 px-4">Date</th><th class="py-3 px-4">Submitted By</th><th class="py-3 px-4">Item</th><th class="py-3 px-4">Amount</th><th class="py-3 px-4">Status</th>
+                            </tr></thead>
+                            <tbody>${tableRows}</tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Report New Expense</h2>
+                    <form id="expense-form" class="space-y-4">
+                        <div><label class="block text-sm font-medium">Item</label><input type="text" id="expense-item" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                        <div><label class="block text-sm font-medium">Description</label><textarea id="expense-desc" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea></div>
+                        <div><label class="block text-sm font-medium">Category</label><input type="text" id="expense-cat" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">Amount</label><input type="number" step="0.01" id="expense-amount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                        <button type="submit" class="w-full bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700">Submit Expense</button>
+                    </form>
+                </div>
+            </div>`;
         }
         
         function renderFamilyProgressTab() {
             const container = document.getElementById('progress');
-            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><h2 class="text-xl font-semibold mb-4">Family Progress</h2><p>Coming soon...</p></div>`;
+            const tableRows = Object.entries(adminData.familyProgress).map(([familyId, data]) => `
+                <tr class="border-b family-row" data-family-id="${familyId}">
+                    <td class="py-3 px-4 font-mono">${familyId}</td>
+                    <td class="py-3 px-4 text-center">${data.progress.semester1.completed}</td>
+                    <td class="py-3 px-4 text-center">${data.progress.semester1.inProgress}</td>
+                    <td class="py-3 px-4 text-center text-red-600">${data.progress.semester1.penalty}</td>
+                    <td class="py-3 px-4 text-center font-semibold">${data.progress.semester1.totalRequired}</td>
+                    <td class="py-3 px-4 text-center">${data.progress.semester2.completed}</td>
+                    <td class="py-3 px-4 text-center">${data.progress.semester2.inProgress}</td>
+                    <td class="py-3 px-4 text-center text-red-600">${data.progress.semester2.penalty}</td>
+                    <td class="py-3 px-4 text-center font-semibold">${data.progress.semester2.totalRequired}</td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Family Progress</h2>
+                    <input type="text" id="family-search" placeholder="Search by Family ID..." class="w-1/3 rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50"><tr>
+                            <th rowspan="2" class="py-3 px-4 align-bottom">Family ID</th>
+                            <th colspan="4" class="py-3 px-4 text-center border-b border-l">Semester 1</th>
+                            <th colspan="4" class="py-3 px-4 text-center border-b border-l">Semester 2</th>
+                        </tr><tr>
+                            <th class="py-2 px-4 text-center font-normal text-xs border-l">Completed</th><th class="py-2 px-4 text-center font-normal text-xs">In Progress</th><th class="py-2 px-4 text-center font-normal text-xs">Penalty</th><th class="py-2 px-4 text-center font-normal text-xs">Total Req.</th>
+                            <th class="py-2 px-4 text-center font-normal text-xs border-l">Completed</th><th class="py-2 px-4 text-center font-normal text-xs">In Progress</th><th class="py-2 px-4 text-center font-normal text-xs">Penalty</th><th class="py-2 px-4 text-center font-normal text-xs">Total Req.</th>
+                        </tr></thead>
+                        <tbody id="family-progress-tbody">${tableRows}</tbody>
+                    </table>
+                </div>
+            </div>`;
         }
 
         // --- EVENT LISTENERS ---
@@ -223,6 +311,17 @@
                     document.getElementById(tabId).classList.add('tab-content-active');
                 }
             });
+
+            const familySearch = document.getElementById('family-search');
+            if (familySearch) {
+                familySearch.addEventListener('input', e => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    document.querySelectorAll('#family-progress-tbody .family-row').forEach(row => {
+                        const familyId = row.dataset.familyId.toLowerCase();
+                        row.style.display = familyId.includes(searchTerm) ? '' : 'none';
+                    });
+                });
+            }
         }
 
         // --- INITIALIZATION ---
