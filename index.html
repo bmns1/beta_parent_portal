@@ -266,13 +266,13 @@
                 ? adminData.signups
                 : adminData.signups.filter(s => oppMap[s.opportunityid]?.eventid === eventId);
 
-            tbody.innerHTML = filteredSignups.map(signup => {
-                const opp = oppMap[signup.opportunityid];
+            tbody.innerHTML = filteredSignups.map(signups => {
+                const opp = oppMap[signups.opportunityid];
                 return `<tr class="border-b">
-                    <td class="py-3 px-4 font-mono">${signup.familyid}</td>
-                    <td class="py-3 px-4">${signup.parentemail}</td>
+                    <td class="py-3 px-4 font-mono">${signups.familyid}</td>
+                    <td class="py-3 px-4">${signups.parentemail}</td>
                     <td class="py-3 px-4">${opp ? opp.title : 'N/A'}</td>
-                    <td class="py-3 px-4">${signup.status}</td>
+                    <td class="py-3 px-4">${signups.status}</td>
                 </tr>`;
             }).join('');
         }
