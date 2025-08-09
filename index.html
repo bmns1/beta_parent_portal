@@ -478,6 +478,7 @@
 
                     fetch(ADMIN_WEB_APP_URL, {
                         method: 'POST',
+                        mode: 'no-cors',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ action: (action === 'Remove' ? 'removeSignup' : 'updateSignupStatus'), signupId, newStatus: action, token: ID_TOKEN })
                     })
@@ -514,6 +515,7 @@
 
                 fetch(ADMIN_WEB_APP_URL, {
                     method: 'POST',
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'reportExpense', data: expenseData, token: ID_TOKEN })
                 })
