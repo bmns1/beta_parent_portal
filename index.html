@@ -182,23 +182,19 @@
         function renderDashboard() {
             const container = document.getElementById('dashboard');
             
-            // Semester 1 stats
             const s1Completed = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester1.completed, 0);
             const s1InProgress = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester1.inProgress, 0);
             const s1Vacant = adminData.volunteering.filter(o => o.semester == 1).reduce((sum, opp) => sum + ((parseInt(opp.neededvolunteers) || 0) - (parseInt(opp.signedupvolunteers) || 0)) * (parseInt(opp['number of hours']) || 0), 0);
             
-            // Semester 2 stats
             const s2Completed = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester2.completed, 0);
             const s2InProgress = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester2.inProgress, 0);
             const s2Vacant = adminData.volunteering.filter(o => o.semester == 2).reduce((sum, opp) => sum + ((parseInt(opp.neededvolunteers) || 0) - (parseInt(opp.signedupvolunteers) || 0)) * (parseInt(opp['number of hours']) || 0), 0);
 
             container.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Semester 1 -->
                     <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S1 Completed Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s1Completed}</p></div>
                     <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S1 In-Progress Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s1InProgress}</p></div>
                     <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S1 Vacant Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s1Vacant}</p></div>
-                    <!-- Semester 2 -->
                     <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S2 Completed Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s2Completed}</p></div>
                     <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S2 In-Progress Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s2InProgress}</p></div>
                     <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S2 Vacant Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s2Vacant}</p></div>
@@ -210,10 +206,17 @@
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow">
                         <h3 class="text-xl font-semibold mb-4">Families with Hours Remaining</h3>
-                        <div class="mt-4">
-                            <label for="hours-slider" class="block text-sm font-medium text-gray-700">Show families with more than <span id="slider-value" class="font-bold text-teal-600">8</span> hours remaining</label>
-                            <input id="hours-slider" type="range" min="0" max="20" value="8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
-                            <p class="text-center text-4xl font-bold text-gray-800 mt-4" id="families-remaining-count">--</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="hours-slider-s1" class="block text-sm font-medium text-gray-700">Semester 1: More than <span id="slider-value-s1" class="font-bold text-teal-600">8</span> hrs remaining</label>
+                                <input id="hours-slider-s1" type="range" min="0" max="20" value="8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
+                                <p class="text-center text-4xl font-bold text-gray-800 mt-2" id="families-remaining-count-s1">--</p>
+                            </div>
+                            <div>
+                                <label for="hours-slider-s2" class="block text-sm font-medium text-gray-700">Semester 2: More than <span id="slider-value-s2" class="font-bold text-teal-600">8</span> hrs remaining</label>
+                                <input id="hours-slider-s2" type="range" min="0" max="20" value="8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
+                                <p class="text-center text-4xl font-bold text-gray-800 mt-2" id="families-remaining-count-s2">--</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -236,23 +239,24 @@
         }
         
         function updateRemainingFamiliesCount() {
-            const slider = document.getElementById('hours-slider');
-            const sliderValue = document.getElementById('slider-value');
-            const countDisplay = document.getElementById('families-remaining-count');
-            if (!slider || !sliderValue || !countDisplay) return;
+            const slider1 = document.getElementById('hours-slider-s1');
+            const value1 = document.getElementById('slider-value-s1');
+            const count1 = document.getElementById('families-remaining-count-s1');
+            const slider2 = document.getElementById('hours-slider-s2');
+            const value2 = document.getElementById('slider-value-s2');
+            const count2 = document.getElementById('families-remaining-count-s2');
 
-            const hours = parseInt(slider.value);
-            sliderValue.textContent = hours;
-            
-            const familiesWithHoursRemaining = Object.values(adminData.familyProgress).filter(family => {
-                const s1Remaining = family.progress.semester1.totalRequired - family.progress.semester1.completed;
-                const s2Remaining = family.progress.semester2.totalRequired - family.progress.semester2.completed;
-                // Simple logic: check current semester or total if past S1
-                const relevantRemaining = new Date().getMonth() < 1 ? s1Remaining : s1Remaining + s2Remaining;
-                return relevantRemaining > hours;
-            }).length;
+            if (!slider1 || !slider2) return;
 
-            countDisplay.textContent = familiesWithHoursRemaining;
+            const hours1 = parseInt(slider1.value);
+            value1.textContent = hours1;
+            const countS1 = Object.values(adminData.familyProgress).filter(f => (f.progress.semester1.totalRequired - f.progress.semester1.completed) > hours1).length;
+            count1.textContent = countS1;
+
+            const hours2 = parseInt(slider2.value);
+            value2.textContent = hours2;
+            const countS2 = Object.values(adminData.familyProgress).filter(f => (f.progress.semester2.totalRequired - f.progress.semester2.completed) > hours2).length;
+            count2.textContent = countS2;
         }
 
         function renderEventsTab() {
@@ -502,10 +506,8 @@
                 });
             }
             
-            const hoursSlider = document.getElementById('hours-slider');
-            if(hoursSlider) {
-                hoursSlider.addEventListener('input', updateRemainingFamiliesCount);
-            }
+            document.getElementById('hours-slider-s1')?.addEventListener('input', updateRemainingFamiliesCount);
+            document.getElementById('hours-slider-s2')?.addEventListener('input', updateRemainingFamiliesCount);
         }
 
         // --- INITIALIZATION ---
