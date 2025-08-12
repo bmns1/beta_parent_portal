@@ -185,10 +185,12 @@
             const s1Completed = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester1.completed, 0);
             const s1InProgress = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester1.inProgress, 0);
             const s1Vacant = adminData.volunteering.filter(o => o.semester == 1).reduce((sum, opp) => sum + ((parseInt(opp.neededvolunteers) || 0) - (parseInt(opp.signedupvolunteers) || 0)) * (parseInt(opp['number of hours']) || 0), 0);
+            const s1TotalRequired = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester1.baseRequired, 0);
             
             const s2Completed = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester2.completed, 0);
             const s2InProgress = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester2.inProgress, 0);
             const s2Vacant = adminData.volunteering.filter(o => o.semester == 2).reduce((sum, opp) => sum + ((parseInt(opp.neededvolunteers) || 0) - (parseInt(opp.signedupvolunteers) || 0)) * (parseInt(opp['number of hours']) || 0), 0);
+            const s2TotalRequired = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester2.baseRequired, 0);
 
             container.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -230,7 +232,16 @@
                     datasets: [
                         { label: 'Completed', data: [s1Completed, s2Completed], backgroundColor: '#0d9488' },
                         { label: 'In Progress', data: [s1InProgress, s2InProgress], backgroundColor: '#f59e0b' },
-                        { label: 'Vacant', data: [s1Vacant, s2Vacant], backgroundColor: '#ef4444' }
+                        { label: 'Vacant', data: [s1Vacant, s2Vacant], backgroundColor: '#ef4444' },
+                        {
+                            label: 'Total Required',
+                            data: [s1TotalRequired, s2TotalRequired],
+                            type: 'line',
+                            borderColor: '#4b5563',
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.1
+                        }
                     ]
                 },
                 options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
