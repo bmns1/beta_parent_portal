@@ -302,6 +302,87 @@
             </div>`;
         }
 
+
+        // --- MODAL & FORM HANDLING --- ==================================================================================================
+function openEventModal(event = null) {
+    const modal = document.getElementById('event-modal');
+    const form = document.getElementById('event-form');
+    const title = document.getElementById('modal-title');
+
+    form.reset(); // Clear previous data
+
+    if (event) {
+        title.textContent = 'Edit Event';
+        document.getElementById('event-id').value = event.eventid;
+        document.getElementById('event-name').value = event.eventname;
+        document.getElementById('event-date').value = new Date(event.eventdate).toISOString().split('T')[0];
+        document.getElementById('event-grade').value = event.grade || '';
+        document.getElementById('event-classroom').value = event.classroom || '';
+    } else {
+        title.textContent = 'Create New Event';
+    }
+    modal.style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('event-modal').style.display = 'none';
+}
+
+function handleEventFormSubmit(e) {
+    e.preventDefault();
+    const eventData = {
+        eventname: document.getElementById('event-name').value,
+        eventdate: document.getElementById('event-date').value,
+        grade: document.getElementById('event-grade').value,
+        classroom: document.getElementById('event-classroom').value,
+    };
+
+    // Handle the "Don't show" checkbox
+    if (document.getElementById('no-show-checkbox').checked) {
+        eventData.eventdate = '2025-01-01';
+    }
+
+    // Generate Event ID for new events
+    let eventId = document.getElementById('event-id').value;
+    if (!eventId) {
+        const date = new Date(eventData.eventdate);
+        const dateString = `${(date.getMonth() + 1).toString().padStart(2, '0')}${(date.getDate()).toString().padStart(2, '0')}${date.getFullYear()}`;
+        const nameInitial = eventData.eventname.charAt(0).toUpperCase();
+        let baseId = `E${dateString}${nameInitial}`;
+        let counter = 1;
+        eventId = baseId;
+        while (adminData.events.some(e => e.eventid === eventId)) {
+            eventId = `${baseId}${counter++}`;
+        }
+    }
+    eventData.eventid = eventId;
+    
+    const action = document.getElementById('event-id').value ? 'updateEvent' : 'addEvent';
+    const payload = {
+        action: action,
+        token: ID_TOKEN,
+        data: eventData,
+        id: eventData.eventid
+    };
+
+    // Send data to backend
+    fetch(ADMIN_WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' }
+    }).then(() => {
+        alert(`Event successfully ${action === 'addEvent' ? 'created' : 'updated'}! The portal will now refresh.`);
+        closeModal();
+        fetchAdminData(ID_TOKEN);
+    }).catch(error => {
+        console.error('Event submission error:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
+
+        //==================================================================================
+
         function renderVolunteeringTab() {
             const container = document.getElementById('volunteering');
             const tableRows = adminData.volunteering.map(opp => `
@@ -462,6 +543,11 @@
 
         // --- EVENT LISTENERS ---
         function addEventListeners() {
+            document.body.addEventListener('click', e => {
+                if (e.target.matches('.bg-teal-600') && e.target.textContent === 'Create Event') {
+                openEventModal();
+                }
+            });
             document.getElementById('sidebar-nav').addEventListener('click', e => {
                 const link = e.target.closest('.sidebar-link');
                 if (link) {
