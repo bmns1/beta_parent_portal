@@ -396,24 +396,36 @@
 
 
         function renderSignupsTable(eventId) {
-            const tbody = document.getElementById('signups-tbody');
-            if (!tbody) return;
+    const tbody = document.getElementById('signups-tbody');
+    if (!tbody || !adminData.volunteering || !adminData.signups) return;
 
-            const filteredSignups = (eventId === 'all')
-                ? adminData.signups
-                : adminData.signups.filter(s => s.eventid === eventId);
+    // 1. Create a quick lookup map of all volunteering opportunities.
+    const volunteeringMap = adminData.volunteering.reduce((map, opp) => {
+        map[opp.opportunityid] = opp;
+        return map;
+    }, {});
 
-            tbody.innerHTML = filteredSignups.map(signup => {
-                return `<tr class="border-b">
-                    <td class="py-3 px-4 font-mono">${signup.familyid}</td>
-                    <td class="py-3 px-4">${signup.parentemail}</td>
-                    <td class="py-3 px-4">${signup.title}</td>
-                    <td class="py-3 px-4">${signup.time}</td>
-                    <td class="py-3 px-4 text-xs">${signup.description}</td>
-                    <td class="py-3 px-4">${signup.status}</td>
-                </tr>`;
-            }).join('');
-        }
+    // 2. Filter the signups based on the selected event.
+    const filteredSignups = (eventId === 'all')
+        ? adminData.signups
+        : adminData.signups.filter(s => {
+            const opp = volunteeringMap[s.opportunityid];
+            return opp && opp.eventid === eventId;
+        });
+
+    // 3. For each signup, find the details from the map and render the row.
+    tbody.innerHTML = filteredSignups.map(signup => {
+        const oppDetails = volunteeringMap[signup.opportunityid] || {}; // Find details using the map
+        return `<tr class="border-b">
+            <td class="py-3 px-4 font-mono">${signup.familyid}</td>
+            <td class="py-3 px-4">${signup.parentemail}</td>
+            <td class="py-3 px-4">${oppDetails.title || 'N/A'}</td>
+            <td class="py-3 px-4">${oppDetails.time || 'N/A'}</td>
+            <td class="py-3 px-4 text-xs">${oppDetails.description || 'N/A'}</td>
+            <td class="py-3 px-4">${signup.status}</td>
+        </tr>`;
+    }).join('');
+}
 
         function renderExpensesTab() {
             const container = document.getElementById('expenses');
