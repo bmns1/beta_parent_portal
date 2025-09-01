@@ -67,6 +67,9 @@
                         <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="signups-admin">
                             <i class="ph-user-list-fill mr-3"></i> Signed Up Families
                         </a>
+                         <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="event-status">
+                            <i class="ph-chart-bar-fill mr-3"></i> Event Status
+                        </a>
                         <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="expenses">
                             <i class="ph-receipt-fill mr-3"></i> PTO Expenses
                         </a>
@@ -114,6 +117,7 @@
                     <div id="events" class="tab-content"></div>
                     <div id="volunteering" class="tab-content"></div>
                     <div id="signups-admin" class="tab-content"></div>
+                    <div id="event-status" class="tab-content"></div>
                     <div id="expenses" class="tab-content"></div>
                     <div id="progress" class="tab-content"></div>
                 </main>
@@ -122,46 +126,7 @@
     </div>
     
     <!-- Modal Placeholder -->
-    <div id="modal-placeholder">
-        <div id="event-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-            <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
-                <div class="mt-3">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Create New Event</h3>
-                    <form id="event-form" class="mt-4 space-y-4">
-                        <input type="hidden" id="event-id">
-                        <div>
-                            <label class="block text-sm font-medium">Event Name</label>
-                            <input type="text" id="event-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium">Event Date</label>
-                            <input type="date" id="event-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" id="no-show-checkbox" class="h-4 w-4 rounded border-gray-300 text-teal-600">
-                            <label for="no-show-checkbox" class="ml-2 block text-sm text-gray-900">Don't show in upcoming events (e.g., for internal tasks)</label>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium">Grade</label>
-                            <select id="event-grade" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                <option value="">All</option><option>PK</option><option>K</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium">Classroom</label>
-                            <select id="event-classroom" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                <option value="">All</option><option>A</option><option>B</option>
-                            </select>
-                        </div>
-                        <div class="items-center px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-base font-medium text-white hover:bg-teal-700 sm:ml-3 sm:w-auto sm:text-sm">Save</button>
-                            <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto sm:text-sm" onclick="closeModal()">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="modal-placeholder"></div>
 
     <script>
         const ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyXR747DT2sH_K-rvtoKEObWo5OYUpgUhBMWG7zwm4B3uliAGLZ1Jq0bZ2onc_U-8g/exec';
@@ -188,79 +153,12 @@
             window.location.reload();
         }
         
-        // --- MODAL & FORM HANDLING ---
-        function openEventModal(event = null) {
-            const modal = document.getElementById('event-modal');
-            const form = document.getElementById('event-form');
-            const title = document.getElementById('modal-title');
-
-            form.reset(); 
-
-            if (event) {
-                title.textContent = 'Edit Event';
-                document.getElementById('event-id').value = event.eventid;
-                document.getElementById('event-name').value = event.eventname;
-                document.getElementById('event-date').value = new Date(event.eventdate).toISOString().split('T')[0];
-                document.getElementById('event-grade').value = event.grade || '';
-                document.getElementById('event-classroom').value = event.classroom || '';
-            } else {
-                title.textContent = 'Create New Event';
-            }
-            modal.style.display = 'flex';
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('event-modal').style.display = 'none';
-        }
-
-        function handleEventFormSubmit(e) {
-            e.preventDefault(); 
-            const eventData = {
-                eventname: document.getElementById('event-name').value,
-                eventdate: document.getElementById('event-date').value,
-                grade: document.getElementById('event-grade').value === 'All' ? '' : document.getElementById('event-grade').value,
-                classroom: document.getElementById('event-classroom').value === 'All' ? '' : document.getElementById('event-classroom').value,
-            };
-
-            if (document.getElementById('no-show-checkbox').checked) {
-                eventData.eventdate = '2025-01-01';
-            }
-
-            let eventId = document.getElementById('event-id').value;
-            if (!eventId) {
-                const date = new Date(eventData.eventdate);
-                const dateString = `${(date.getMonth() + 1).toString().padStart(2, '0')}${(date.getDate()).toString().padStart(2, '0')}${date.getFullYear()}`;
-                const nameInitial = eventData.eventname.charAt(0).toUpperCase();
-                let baseId = `E${dateString}${nameInitial}`;
-                let counter = 1;
-                eventId = baseId;
-                while (adminData.events.some(e => e.eventid === eventId)) {
-                    eventId = `${baseId}${counter++}`;
-                }
-            }
-            eventData.eventid = eventId;
-            
-            const action = document.getElementById('event-id').value ? 'updateEvent' : 'addEvent';
-            const payload = {
-                action: action,
-                token: ID_TOKEN,
-                data: eventData,
-                id: eventData.eventid
-            };
-
-            fetch(ADMIN_WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(payload),
-                headers: { 'Content-Type': 'application/json' }
-            }).then(() => {
-                alert(`Event successfully ${action === 'addEvent' ? 'created' : 'updated'}! The portal will now refresh.`);
-                closeModal();
-                fetchAdminData(ID_TOKEN);
-            }).catch(error => {
-                console.error('Event submission error:', error);
-                alert('An error occurred. Please try again.');
-            });
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
         // --- DATA FETCH & RENDER ---
@@ -288,6 +186,7 @@
             renderEventsTab();
             renderVolunteeringTab();
             renderSignupsTab();
+            renderEventStatusTab();
             renderExpensesTab();
             renderFamilyProgressTab();
             renderMobileMenu();
@@ -447,31 +346,7 @@
                 </div>
             </div>`;
         }
-       /** 
-        function renderSignupsTab() {
-            const container = document.getElementById('signups-admin');
-            const eventOptions = adminData.events.map(event => `<option value="${event.eventid}">${event.eventname}</option>`).join('');
-
-            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold">Signed Up Families</h2>
-                    <select id="signup-event-filter" class="w-1/3 rounded-md border-gray-300 shadow-sm">
-                        <option value="all">All Events</option>
-                        ${eventOptions}
-                    </select>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-50"><tr>
-                            <th class="py-3 px-4">Family ID</th><th class="py-3 px-4">Parent Email</th><th class="py-3 px-4">Task</th><th class="py-3 px-4">Status</th>
-                        </tr></thead>
-                        <tbody id="signups-tbody"></tbody>
-                    </table>
-                </div>
-            </div>`;
-            renderSignupsTable('all');
-        }
-*/
+        
         function renderSignupsTab() {
             const container = document.getElementById('signups-admin');
             const eventOptions = adminData.events.map(event => `<option value="${event.eventid}">${event.eventname}</option>`).join('');
@@ -500,30 +375,26 @@
             </div>`;
             renderSignupsTable('all');
         }
-/** ======================================================================================================================
-        
-        function renderSignupsTable(eventId) {
-            const tbody = document.getElementById('signups-tbody');
-            const oppMap = adminData.volunteering.reduce((map, opp) => {
-                map[opp.opportunityid] = opp;
-                return map;
-            }, {});
 
-            const filteredSignups = (eventId === 'all')
-                ? adminData.signups
-                : adminData.signups.filter(s => oppMap[s.opportunityid]?.eventid === eventId);
+        function renderEventStatusTab() {
+            const container = document.getElementById('event-status');
+             const eventOptions = adminData.events.map(event => `<option value="${event.eventid}">${event.eventname}</option>`).join('');
 
-            tbody.innerHTML = filteredSignups.map(signup => {
-                const opp = oppMap[signup.opportunityid];
-                return `<tr class="border-b">
-                    <td class="py-3 px-4 font-mono">${signup.familyid}</td>
-                    <td class="py-3 px-4">${signup.parentemail}</td>
-                    <td class="py-3 px-4">${opp ? opp.title : 'N/A'}</td>
-                    <td class="py-3 px-4">${signup.status}</td>
-                </tr>`;
-            }).join('');
+            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Event Signup Status</h2>
+                    <select id="event-status-filter" class="w-1/3 rounded-md border-gray-300 shadow-sm">
+                        <option value="all">Select an Event</option>
+                        ${eventOptions}
+                    </select>
+                </div>
+                <div id="event-status-display">
+                    <p class="text-gray-500">Select an event from the dropdown to see its status.</p>
+                </div>
+            </div>`;
         }
-*/
+
+
         function renderSignupsTable(eventId) {
             const tbody = document.getElementById('signups-tbody');
             if (!tbody) return;
@@ -544,8 +415,6 @@
             }).join('');
         }
 
-
-        
         function renderExpensesTab() {
             const container = document.getElementById('expenses');
             const tableRows = adminData.expenses.map(exp => `
@@ -628,20 +497,6 @@
 
         // --- EVENT LISTENERS ---
         function addEventListeners() {
-            document.body.addEventListener('click', e => {
-                const button = e.target.closest('button');
-                if (!button) return;
-
-                if (button.textContent === 'Create Event') {
-                    openEventModal();
-                }
-            });
-
-            const eventForm = document.getElementById('event-form');
-            if (eventForm) {
-                eventForm.addEventListener('submit', handleEventFormSubmit);
-            }
-            
             document.getElementById('sidebar-nav').addEventListener('click', e => {
                 const link = e.target.closest('.sidebar-link');
                 if (link) {
@@ -696,6 +551,41 @@
                     renderSignupsTable(e.target.value);
                 });
             }
+
+            const eventStatusFilter = document.getElementById('event-status-filter');
+            if(eventStatusFilter) {
+                eventStatusFilter.addEventListener('change', e => {
+                    const eventId = e.target.value;
+                    const display = document.getElementById('event-status-display');
+                    if (eventId === 'all') {
+                        display.innerHTML = '<p class="text-gray-500">Select an event from the dropdown to see its status.</p>';
+                        return;
+                    }
+                    const stats = adminData.eventStats[eventId];
+                    if (stats) {
+                        const hoursProgress = stats.hoursRequired > 0 ? (stats.hoursFilled / stats.hoursRequired) * 100 : 0;
+                        const volunteerProgress = stats.totalNeeded > 0 ? (stats.totalSignedUp / stats.totalNeeded) * 100 : 0;
+                        display.innerHTML = `
+                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="font-semibold text-gray-700">Volunteer Spots</h4>
+                                    <p>${stats.totalSignedUp} / ${stats.totalNeeded} Filled</p>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                        <div class="bg-teal-600 h-2.5 rounded-full" style="width: ${volunteerProgress}%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-700">Volunteer Hours</h4>
+                                    <p>${stats.hoursFilled} / ${stats.hoursRequired} Hours Filled</p>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${hoursProgress}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }
             
             document.getElementById('hours-slider-s1')?.addEventListener('input', updateRemainingFamiliesCount);
             document.getElementById('hours-slider-s2')?.addEventListener('input', updateRemainingFamiliesCount);
@@ -722,3 +612,4 @@
 
 </body>
 </html>
+
