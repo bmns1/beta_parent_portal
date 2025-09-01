@@ -447,7 +447,7 @@
                 </div>
             </div>`;
         }
-        
+       /** 
         function renderSignupsTab() {
             const container = document.getElementById('signups-admin');
             const eventOptions = adminData.events.map(event => `<option value="${event.eventid}">${event.eventname}</option>`).join('');
@@ -471,7 +471,37 @@
             </div>`;
             renderSignupsTable('all');
         }
+*/
+        function renderSignupsTab() {
+            const container = document.getElementById('signups-admin');
+            const eventOptions = adminData.events.map(event => `<option value="${event.eventid}">${event.eventname}</option>`).join('');
 
+            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Signed Up Families</h2>
+                    <select id="signup-event-filter" class="w-1/3 rounded-md border-gray-300 shadow-sm">
+                        <option value="all">All Events</option>
+                        ${eventOptions}
+                    </select>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50"><tr>
+                            <th class="py-3 px-4">Family ID</th>
+                            <th class="py-3 px-4">Parent Email</th>
+                            <th class="py-3 px-4">Task</th>
+                            <th class="py-3 px-4">Time</th>
+                            <th class="py-3 px-4">Description</th>
+                            <th class="py-3 px-4">Status</th>
+                        </tr></thead>
+                        <tbody id="signups-tbody"></tbody>
+                    </table>
+                </div>
+            </div>`;
+            renderSignupsTable('all');
+        }
+/** ======================================================================================================================
+        
         function renderSignupsTable(eventId) {
             const tbody = document.getElementById('signups-tbody');
             const oppMap = adminData.volunteering.reduce((map, opp) => {
@@ -493,7 +523,29 @@
                 </tr>`;
             }).join('');
         }
+*/
+        function renderSignupsTable(eventId) {
+            const tbody = document.getElementById('signups-tbody');
+            if (!tbody) return;
 
+            const filteredSignups = (eventId === 'all')
+                ? adminData.signups
+                : adminData.signups.filter(s => s.eventid === eventId);
+
+            tbody.innerHTML = filteredSignups.map(signup => {
+                return `<tr class="border-b">
+                    <td class="py-3 px-4 font-mono">${signup.familyid}</td>
+                    <td class="py-3 px-4">${signup.parentemail}</td>
+                    <td class="py-3 px-4">${signup.title}</td>
+                    <td class="py-3 px-4">${signup.time}</td>
+                    <td class="py-3 px-4 text-xs">${signup.description}</td>
+                    <td class="py-3 px-4">${signup.status}</td>
+                </tr>`;
+            }).join('');
+        }
+
+
+        
         function renderExpensesTab() {
             const container = document.getElementById('expenses');
             const tableRows = adminData.expenses.map(exp => `
