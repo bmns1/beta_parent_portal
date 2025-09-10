@@ -513,7 +513,7 @@ function renderSignupsTab() {
         const opportunityCardsHtml = Object.entries(opportunitiesInEvent).map(([oppId, signups]) => {
             const oppDetails = volunteeringMap[oppId] || {};
             
-            const familyListHtml = signups.map(s => {
+           /** const familyListHtml = signups.map(s => {
                 const familyDetails = adminData.familyDetails[s.familyid] || { students: ['N/A'] };
                 const studentNames = familyDetails.students.join(', ');
                 return `
@@ -523,7 +523,29 @@ function renderSignupsTab() {
                     </div>
                 `;
             }).join('');
+*/
+            const familyListHtml = signups.map(s => {
+                const familyDetails = adminData.familyDetails[s.familyid] || { students: ['N/A'] };
+                const studentNames = familyDetails.students.join(', ');
+    
+                 // Logic to determine the color of the status badge
+                    const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : 
+                        s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 
+                        'text-gray-700 bg-gray-100';
 
+                return `
+                <div class="border-t mt-2 pt-2">
+                    <div class="flex justify-between items-center">
+                         <div>
+                            <p class="font-semibold text-sm">${s.parentemail}</p>
+                            <p class="text-xs text-gray-600">Family ID: ${s.familyid} | Students: ${studentNames}</p>
+                         </div>
+                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span>
+                    </div>
+                </div>
+            `;
+            }).join('');
+            
             return `
                 <div class="bg-white p-4 rounded-lg shadow-sm">
                     <h5 class="font-bold text-gray-800">${oppDetails.title || 'Unknown Task'} (${oppDetails.time || 'N/A'})</h5>
