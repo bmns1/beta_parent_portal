@@ -376,7 +376,7 @@
             </div>`;
             renderSignupsTable('all');
         }
-*/
+
 
       function renderSignupsTab() {
     const container = document.getElementById('signups-admin');
@@ -457,6 +457,80 @@
 
     container.innerHTML = `<div class="space-y-4">${eventCardsHtml || '<p>No families have signed up for any events yet.</p>'}</div>`;
 }
+    */
+
+
+        function renderSignupsTab() {
+    const container = document.getElementById('signups-admin');
+    if (!adminData.events || !adminData.signups || !adminData.familyDetails) {
+        container.innerHTML = '<div class="bg-white p-6 rounded-lg shadow"><p>No signup data available to display.</p></div>';
+        return;
+    }
+
+    const signupsByEvent = adminData.signups.reduce((acc, signup) => {
+        const eventId = signup.eventid;
+        if (eventId) {
+            if (!acc[eventId]) acc[eventId] = [];
+            acc[eventId].push(signup);
+        }
+        return acc;
+    }, {});
+
+    const eventCardsHtml = adminData.events
+        .sort((a, b) => new Date(a.eventdate) - new Date(b.eventdate))
+        .map((event, index) => {
+            const eventSignups = signupsByEvent[event.eventid] || [];
+            if (eventSignups.length === 0) return ''; 
+
+            const familiesInEvent = eventSignups.reduce((acc, signup) => {
+                const familyId = signup.familyid;
+                if (familyId) {
+                    if (!acc[familyId]) acc[familyId] = [];
+                    acc[familyId].push(signup);
+                }
+                return acc;
+            }, {});
+
+            const familyCardsHtml = Object.entries(familiesInEvent).map(([familyId, signups]) => {
+                const familyDetails = adminData.familyDetails[familyId] || { students: ['N/A'] };
+                const studentNames = familyDetails.students.join(', ');
+                const parentEmail = signups[0].parentemail; 
+
+                const taskHtml = signups.map(s => `
+                    <div class="border-t mt-2 pt-2">
+                        <p class="font-semibold">${s.title} (${s.time})</p>
+                        <p class="text-xs text-gray-500">${s.description}</p>
+                        <p class="text-xs mt-1">Status: <span class="font-medium">${s.status}</span></p>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <h5 class="font-bold text-gray-800">Family ID: ${familyId}</h5>
+                        <p class="text-sm text-gray-600">${parentEmail}</p>
+                        <p class="text-sm text-gray-500 mt-1">Students: ${studentNames}</p>
+                        ${taskHtml}
+                    </div>`;
+            }).join('');
+
+            return `
+                <div class="bg-gray-100 rounded-lg shadow-sm">
+                    <div class="p-4 border-b border-gray-200 cursor-pointer flex justify-between items-center event-card-header" data-target="family-group-${index}">
+                        <h3 class="text-xl font-bold text-gray-900">${event.eventname} <span class="text-base font-normal text-gray-500">(${new Date(event.eventdate).toLocaleDateString()})</span></h3>
+                        <i class="ph-caret-down text-2xl transition-transform"></i>
+                    </div>
+                    <div id="family-group-${index}" class="hidden p-4 space-y-4 bg-gray-50">
+                        ${familyCardsHtml}
+                    </div>
+                </div>`;
+    }).join('');
+
+    container.innerHTML = `<div class="space-y-4">${eventCardsHtml || '<p>No families have signed up for any events yet.</p>'}</div>`;
+}
+
+
+
+
         
         function renderEventStatusTab() {
             const container = document.getElementById('event-status');
