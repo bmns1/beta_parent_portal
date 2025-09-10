@@ -581,16 +581,21 @@
         // --- EVENT LISTENERS ---
         function addEventListeners() {
 
-            const header = e.target.closest('.event-card-header');
-            if (header) {
-                const targetId = header.dataset.target;
-                const content = document.getElementById(targetId);
-                const icon = header.querySelector('i');
-               if (content) {
-                    content.classList.toggle('hidden');
-                    icon.classList.toggle('rotate-180');
+            document.body.addEventListener('click', e => {
+                // ... existing button logic ...
+
+                // NEW: Handles the event card collapse/expand
+                const header = e.target.closest('.event-card-header');
+                if (header) {
+                    const targetId = header.dataset.target;
+                    const content = document.getElementById(targetId);
+                    const icon = header.querySelector('i');
+                    if (content) {
+                        content.classList.toggle('hidden');
+                        icon.classList.toggle('rotate-180');
+                    }
                 }
-            }
+            });
 
             
             document.getElementById('sidebar-nav').addEventListener('click', e => {
@@ -619,6 +624,8 @@
                     document.getElementById(tabId).classList.add('tab-content-active');
                 }
             });
+
+            
 
             document.getElementById('mobile-menu-button').addEventListener('click', () => {
                 document.getElementById('mobile-sidebar').classList.remove('-translate-x-full');
