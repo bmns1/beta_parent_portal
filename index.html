@@ -376,8 +376,8 @@
             </div>`;
             renderSignupsTable('all');
         }
-
-
+*/
+/**
       function renderSignupsTab() {
     const container = document.getElementById('signups-admin');
     if (!adminData.events || !adminData.signups || !adminData.familyDetails || !adminData.volunteering) {
@@ -457,77 +457,82 @@
 
     container.innerHTML = `<div class="space-y-4">${eventCardsHtml || '<p>No families have signed up for any events yet.</p>'}</div>`;
 }
-    */
-
+   
+*/
 
         function renderSignupsTab() {
     const container = document.getElementById('signups-admin');
-    if (!adminData.events || !adminData.signups || !adminData.familyDetails) {
+    if (!adminData.events || !adminData.signups || !adminData.familyDetails || !adminData.volunteering) {
         container.innerHTML = '<div class="bg-white p-6 rounded-lg shadow"><p>No signup data available to display.</p></div>';
         return;
     }
 
     const signupsByEvent = adminData.signups.reduce((acc, signup) => {
-        const eventId = signup.eventid;
-        if (eventId) {
-            if (!acc[eventId]) acc[eventId] = [];
-            acc[eventId].push(signup);
-        }
-        return acc;
+        const eventId = String(signup.eventid || 'general').trim();
+        if (!acc[eventId]) acc[eventId] = [];
+        acc[eventId].push(signup);
     }, {});
 
-    const eventCardsHtml = adminData.events
-        .sort((a, b) => new Date(a.eventdate) - new Date(b.eventdate))
-        .map((event, index) => {
-            const eventSignups = signupsByEvent[event.eventid] || [];
-            if (eventSignups.length === 0) return ''; 
+    const eventNameMap = adminData.events.reduce((map, event) => {
+        map[String(event.eventid).trim()] = event.eventname;
+        return map;
+    }, {});
 
-            const familiesInEvent = eventSignups.reduce((acc, signup) => {
-                const familyId = signup.familyid;
-                if (familyId) {
-                    if (!acc[familyId]) acc[familyId] = [];
-                    acc[familyId].push(signup);
-                }
-                return acc;
-            }, {});
+    const eventCardsHtml = Object.keys(signupsByEvent).map((eventId, index) => {
+        const eventSignups = signupsByEvent[eventId];
+        const eventName = eventNameMap[eventId] || 'General Opportunities';
 
-            const familyCardsHtml = Object.entries(familiesInEvent).map(([familyId, signups]) => {
-                const familyDetails = adminData.familyDetails[familyId] || { students: ['N/A'] };
+        // NEW: Within each event, group the signups by OPPORTUNITY (task/time)
+        const opportunitiesInEvent = eventSignups.reduce((acc, signup) => {
+            const oppId = signup.opportunityid;
+            if (oppId) {
+                if (!acc[oppId]) acc[oppId] = [];
+                acc[oppId].push(signup);
+            }
+            return acc;
+        }, {});
+
+        const opportunityCardsHtml = Object.entries(opportunitiesInEvent).map(([oppId, signups]) => {
+            const oppDetails = adminData.volunteering.find(v => v.opportunityid === oppId) || {};
+            
+            // For each opportunity, list the families who signed up for that specific slot
+            const familyListHtml = signups.map(s => {
+                const familyDetails = adminData.familyDetails[s.familyid] || { students: ['N/A'] };
                 const studentNames = familyDetails.students.join(', ');
-                const parentEmail = signups[0].parentemail; 
-
-                const taskHtml = signups.map(s => `
-                    <div class="border-t mt-2 pt-2">
-                        <p class="font-semibold">${s.title} (${s.time})</p>
-                        <p class="text-xs text-gray-500">${s.description}</p>
-                        <p class="text-xs mt-1">Status: <span class="font-medium">${s.status}</span></p>
-                    </div>
-                `).join('');
-
                 return `
-                    <div class="bg-white p-4 rounded-lg shadow-sm">
-                        <h5 class="font-bold text-gray-800">Family ID: ${familyId}</h5>
-                        <p class="text-sm text-gray-600">${parentEmail}</p>
-                        <p class="text-sm text-gray-500 mt-1">Students: ${studentNames}</p>
-                        ${taskHtml}
-                    </div>`;
+                    <div class="border-t mt-2 pt-2">
+                        <p class="font-semibold text-sm">${s.parentemail}</p>
+                        <p class="text-xs text-gray-600">Family ID: ${s.familyid} | Students: ${studentNames}</p>
+                    </div>
+                `;
             }).join('');
 
             return `
-                <div class="bg-gray-100 rounded-lg shadow-sm">
-                    <div class="p-4 border-b border-gray-200 cursor-pointer flex justify-between items-center event-card-header" data-target="family-group-${index}">
-                        <h3 class="text-xl font-bold text-gray-900">${event.eventname} <span class="text-base font-normal text-gray-500">(${new Date(event.eventdate).toLocaleDateString()})</span></h3>
-                        <i class="ph-caret-down text-2xl transition-transform"></i>
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h5 class="font-bold text-gray-800">${oppDetails.title || 'Unknown Task'} (${oppDetails.time || 'N/A'})</h5>
+                    <p class="text-sm text-gray-500 mt-1">${oppDetails.description || ''}</p>
+                    <div class="mt-2">
+                        <h6 class="text-xs font-semibold text-gray-600 uppercase">Signed-up Families:</h6>
+                        <div class="space-y-2">${familyListHtml}</div>
                     </div>
-                    <div id="family-group-${index}" class="hidden p-4 space-y-4 bg-gray-50">
-                        ${familyCardsHtml}
-                    </div>
-                </div>`;
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="bg-gray-100 rounded-lg shadow-sm">
+                <div class="p-4 border-b border-gray-200 cursor-pointer flex justify-between items-center event-card-header" data-target="opportunity-group-${index}">
+                    <h3 class="text-xl font-bold text-gray-900">${eventName}</h3>
+                    <i class="ph-caret-down text-2xl transition-transform"></i>
+                </div>
+                <div id="opportunity-group-${index}" class="hidden p-4 space-y-4 bg-gray-50">
+                    ${opportunityCardsHtml}
+                </div>
+            </div>`;
     }).join('');
 
     container.innerHTML = `<div class="space-y-4">${eventCardsHtml || '<p>No families have signed up for any events yet.</p>'}</div>`;
 }
-
 
 
 
