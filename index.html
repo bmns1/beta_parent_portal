@@ -380,10 +380,10 @@
 
         function renderSignupsTab() {
     const container = document.getElementById('signups-admin');
-    if (!adminData.events || !adminData.signups || !adminData.familyDetails) {
-        container.innerHTML = '<p>No signup data available.</p>';
-        return;
-    }
+    //if (!adminData.events || !adminData.signups || !adminData.familyDetails) {
+    //    container.innerHTML = '<p>No signup data available.</p>';
+    //    return;
+   // }
 
     // Group all signups by their event ID
     const signupsByEvent = adminData.signups.reduce((acc, signup) => {
