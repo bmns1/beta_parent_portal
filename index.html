@@ -378,27 +378,30 @@
         }
 */
 
-       function renderSignupsTab() {
+      function renderSignupsTab() {
     const container = document.getElementById('signups-admin');
-    if (!adminData.events || !adminData.signups || !adminData.familyDetails) {
+    if (!adminData.events || !adminData.signups || !adminData.familyDetails || !adminData.volunteering) {
         container.innerHTML = '<div class="bg-white p-6 rounded-lg shadow"><p>No signup data available to display.</p></div>';
         return;
     }
 
-    // 1. Group all signups by their event ID. This is the source of truth.
+    // 1. Create a robust lookup map for all volunteering opportunities, just like in the table function.
+    const volunteeringMap = adminData.volunteering.reduce((map, opp) => {
+        if (opp.opportunityid) {
+            map[String(opp.opportunityid).trim()] = opp;
+        }
+        return map;
+    }, {});
+
+    // 2. Group signups by their eventId, which we find from the volunteeringMap.
     const signupsByEvent = adminData.signups.reduce((acc, signup) => {
-        const eventId = String(signup.eventid || 'general').trim();
+        const oppDetails = volunteeringMap[String(signup.opportunityid).trim()];
+        const eventId = oppDetails ? oppDetails.eventid : 'general';
         if (!acc[eventId]) acc[eventId] = [];
         acc[eventId].push(signup);
         return acc;
     }, {});
 
-    if (Object.keys(signupsByEvent).length === 0) {
-        container.innerHTML = '<div class="bg-white p-6 rounded-lg shadow"><p>No families have signed up for any events yet.</p></div>';
-        return;
-    }
-
-    // 2. Create a lookup map for event names.
     const eventNameMap = adminData.events.reduce((map, event) => {
         map[String(event.eventid).trim()] = event.eventname;
         return map;
@@ -409,7 +412,6 @@
         const eventSignups = signupsByEvent[eventId];
         const eventName = eventNameMap[eventId] || 'General Opportunities';
 
-        // Within each event, group the signups by family.
         const familiesInEvent = eventSignups.reduce((acc, signup) => {
             const familyId = signup.familyid;
             if (familyId) {
@@ -424,13 +426,15 @@
             const studentNames = familyDetails.students.join(', ');
             const parentEmail = signups[0].parentemail; 
 
-            const taskHtml = signups.map(s => `
-                <div class="border-t mt-2 pt-2">
-                    <p class="font-semibold">${s.title} (${s.time})</p>
-                    <p class="text-xs text-gray-500">${s.description}</p>
-                    <p class="text-xs mt-1">Status: <span class="font-medium">${s.status}</span></p>
-                </div>
-            `).join('');
+            const taskHtml = signups.map(s => {
+                const oppDetails = volunteeringMap[String(s.opportunityid).trim()] || {}; // Perform the lookup here
+                return `
+                    <div class="border-t mt-2 pt-2">
+                        <p class="font-semibold">${oppDetails.title || 'N/A'} (${oppDetails.time || 'N/A'})</p>
+                        <p class="text-xs text-gray-500">${oppDetails.description || 'N/A'}</p>
+                        <p class="text-xs mt-1">Status: <span class="font-medium">${s.status}</span></p>
+                    </div>`;
+            }).join('');
 
             return `<div class="bg-white p-4 rounded-lg shadow-sm">
                         <h5 class="font-bold text-gray-800">Family ID: ${familyId}</h5>
@@ -451,9 +455,8 @@
                 </div>`;
     }).join('');
 
-    container.innerHTML = `<div class="space-y-4">${eventCardsHtml}</div>`;
+    container.innerHTML = `<div class="space-y-4">${eventCardsHtml || '<p>No families have signed up for any events yet.</p>'}</div>`;
 }
-
         
         function renderEventStatusTab() {
             const container = document.getElementById('event-status');
@@ -590,20 +593,20 @@
         function addEventListeners() {
 
             document.body.addEventListener('click', e => {
-                // ... existing button logic ...
+    // ... existing button logic ...
 
-                // NEW: Handles the event card collapse/expand
-                const header = e.target.closest('.event-card-header');
-                if (header) {
-                    const targetId = header.dataset.target;
-                    const content = document.getElementById(targetId);
-                    const icon = header.querySelector('i');
-                    if (content) {
-                        content.classList.toggle('hidden');
-                        icon.classList.toggle('rotate-180');
-                    }
-                }
-            });
+    // NEW: Handles the event card collapse/expand in the "Signed Up Families" tab
+    const header = e.target.closest('.event-card-header');
+    if (header) {
+        const targetId = header.dataset.target;
+        const content = document.getElementById(targetId);
+        const icon = header.querySelector('i');
+        if (content) {
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+    }
+});
 
             
             document.getElementById('sidebar-nav').addEventListener('click', e => {
