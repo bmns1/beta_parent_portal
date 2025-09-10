@@ -460,22 +460,40 @@
    
 */
 
-        function renderSignupsTab() {
+function renderSignupsTab() {
     const container = document.getElementById('signups-admin');
     if (!adminData.events || !adminData.signups || !adminData.familyDetails || !adminData.volunteering) {
         container.innerHTML = '<div class="bg-white p-6 rounded-lg shadow"><p>No signup data available to display.</p></div>';
         return;
     }
 
-    const signupsByEvent = adminData.signups.reduce((acc, signup) => {
-        const eventId = String(signup.eventid || 'general').trim();
-        if (!acc[eventId]) acc[eventId] = [];
-        acc[eventId].push(signup);
-        return acc; // <-- FIX: Return the accumulator
+    // 1. Create a lookup map to find the eventId for each opportunityId from the volunteering data.
+    const oppToEventMap = adminData.volunteering.reduce((map, opp) => {
+        if (opp.opportunityid) {
+            map[String(opp.opportunityid).trim()] = String(opp.eventid).trim();
+        }
+        return map;
     }, {});
 
+    // 2. Now, group the signups by the eventId found in the lookup map.
+    const signupsByEvent = adminData.signups.reduce((acc, signup) => {
+        const oppId = String(signup.opportunityid).trim();
+        const eventId = oppToEventMap[oppId] || 'general'; // Use the map to find the correct eventId
+        if (!acc[eventId]) acc[eventId] = [];
+        acc[eventId].push(signup);
+        return acc;
+    }, {});
+
+    // ... The rest of the function now receives correctly grouped data and will work as intended ...
     const eventNameMap = adminData.events.reduce((map, event) => {
         map[String(event.eventid).trim()] = event.eventname;
+        return map;
+    }, {});
+
+    const volunteeringMap = adminData.volunteering.reduce((map, opp) => {
+        if (opp.opportunityid) {
+            map[String(opp.opportunityid).trim()] = opp;
+        }
         return map;
     }, {});
 
@@ -484,16 +502,16 @@
         const eventName = eventNameMap[eventId] || 'General Opportunities';
 
         const opportunitiesInEvent = eventSignups.reduce((acc, signup) => {
-            const oppId = signup.opportunityid;
+            const oppId = String(signup.opportunityid).trim();
             if (oppId) {
                 if (!acc[oppId]) acc[oppId] = [];
                 acc[oppId].push(signup);
             }
-            return acc; // <-- FIX: Return the accumulator
+            return acc;
         }, {});
 
         const opportunityCardsHtml = Object.entries(opportunitiesInEvent).map(([oppId, signups]) => {
-            const oppDetails = adminData.volunteering.find(v => v.opportunityid === oppId) || {};
+            const oppDetails = volunteeringMap[oppId] || {};
             
             const familyListHtml = signups.map(s => {
                 const familyDetails = adminData.familyDetails[s.familyid] || { students: ['N/A'] };
