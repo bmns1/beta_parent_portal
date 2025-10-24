@@ -613,7 +613,7 @@ function renderSignupsTab() {
                     document.getElementById('mobile-sidebar').classList.add('-translate-x-full');
                 }
 
-                // Card expand/collapse
+                // --- Card expand/collapse (Check this first!) ---
                 const header = e.target.closest('.event-card-header');
                 if (header) {
                     const targetId = header.dataset.target;
@@ -623,6 +623,7 @@ function renderSignupsTab() {
                         content.classList.toggle('hidden');
                         icon.classList.toggle('rotate-180');
                     }
+                    return; // Action handled, exit
                 }
             });
 
