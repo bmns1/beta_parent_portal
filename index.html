@@ -12,13 +12,32 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f9fafb; /* A lighter gray for admin */
+            background-color: #f1f5f9; /* slate-100 */
         }
+        /* A more subtle active state for the light sidebar */
         .sidebar-link.active {
-            background-color: #0d9488; /* teal-600 */
-            color: white;
+            background-color: #f0fdfa; /* teal-50 */
+            color: #0d9488; /* teal-600 */
+            font-weight: 600;
         }
-        .modal { display: none; }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            margin: 10% auto;
+            width: 90%;
+            max-width: 500px;
+        }
         .modal.flex { display: flex; }
         .tab-content { display: none; }
         .tab-content-active { display: block; }
@@ -27,74 +46,74 @@
 <body class="antialiased">
 
     <!-- Login Screen -->
-    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-100">
-        <div class="text-center p-8 bg-white rounded-lg shadow-lg max-w-sm w-full">
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+        <div class="text-center p-8 bg-white rounded-xl shadow-lg max-w-sm w-full">
             <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
-            <h1 class="text-2xl font-bold text-gray-800">SVA Admin Portal</h1>
-            <p class="text-gray-600 mb-6">Please sign in with an authorized admin account.</p>
+            <h1 class="text-2xl font-bold text-slate-900">SVA Admin Portal</h1>
+            <p class="text-slate-600 mb-6">Please sign in with an authorized admin account.</p>
             <div id="google-signin-button-container" class="flex justify-center"></div>
         </div>
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-50 hidden">
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-100 flex items-center justify-center z-50 hidden">
         <div class="text-center">
             <i class="ph-spinner-gap text-6xl text-teal-600 mx-auto animate-spin"></i>
-            <h2 class="text-2xl font-semibold text-gray-700 mt-4">Loading Admin Data...</h2>
+            <h2 class="text-2xl font-semibold text-slate-700 mt-4">Loading Admin Data...</h2>
         </div>
     </div>
 
     <!-- Main Admin Portal (Initially Hidden) -->
     <div id="portal-container" class="hidden">
-        <div class="flex h-screen bg-gray-100">
+        <div class="flex h-screen bg-slate-100">
             <!-- Sidebar -->
-            <div class="hidden md:flex flex-col w-64 bg-gray-800 text-white">
-                <div class="flex items-center justify-center h-20 border-b border-gray-700">
+            <div class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200">
+                <div class="flex items-center justify-center h-20 border-b border-slate-200">
                     <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-12 w-auto">
-                    <span class="ml-3 font-semibold text-xl">Admin Portal</span>
+                    <span class="ml-3 font-semibold text-xl text-slate-800">Admin Portal</span>
                 </div>
-                <div class="flex-grow">
-                    <nav id="sidebar-nav" class="mt-10">
-                        <a href="#" class="sidebar-link active flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="dashboard">
-                            <i class="ph-gauge-fill mr-3"></i> Dashboard
+                <div class="flex-grow overflow-y-auto">
+                    <nav id="sidebar-nav" class="mt-6 px-4 space-y-2">
+                        <a href="#" class="sidebar-link active flex items-center py-3 px-4 rounded-lg text-slate-700 hover:bg-slate-100 transition duration-200" data-tab="dashboard">
+                            <i class="ph-gauge-fill mr-3 text-lg"></i> Dashboard
                         </a>
-                        <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="events">
-                            <i class="ph-calendar-fill mr-3"></i> Events
+                        <a href="#" class="sidebar-link flex items-center py-3 px-4 rounded-lg text-slate-700 hover:bg-slate-100 transition duration-200" data-tab="events">
+                            <i class="ph-calendar-fill mr-3 text-lg"></i> Events
                         </a>
-                        <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="volunteering">
-                            <i class="ph-hands-clapping-fill mr-3"></i> Volunteering
+                        <a href="#" class="sidebar-link flex items-center py-3 px-4 rounded-lg text-slate-700 hover:bg-slate-100 transition duration-200" data-tab="volunteering">
+                            <i class="ph-hands-clapping-fill mr-3 text-lg"></i> Volunteering
                         </a>
-                        <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="signups-admin">
-                            <i class="ph-user-list-fill mr-3"></i> Signed Up Families
+                        <a href="#" class="sidebar-link flex items-center py-3 px-4 rounded-lg text-slate-700 hover:bg-slate-100 transition duration-200" data-tab="signups-admin">
+                            <i class="ph-user-list-fill mr-3 text-lg"></i> Signed Up Families
                         </a>
-                         <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="event-status">
-                            <i class="ph-chart-bar-fill mr-3"></i> Event Status
+                         <a href="#" class="sidebar-link flex items-center py-3 px-4 rounded-lg text-slate-700 hover:bg-slate-100 transition duration-200" data-tab="event-status">
+                            <i class="ph-chart-bar-fill mr-3 text-lg"></i> Event Status
                         </a>
-                        <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="expenses">
-                            <i class="ph-receipt-fill mr-3"></i> PTO Expenses
+                        <a href="#" class="sidebar-link flex items-center py-3 px-4 rounded-lg text-slate-700 hover:bg-slate-100 transition duration-200" data-tab="expenses">
+                            <i class="ph-receipt-fill mr-3 text-lg"></i> PTO Expenses
                         </a>
-                        <a href="#" class="sidebar-link flex items-center py-3 px-6 transition duration-200 hover:bg-gray-700" data-tab="progress">
-                            <i class="ph-chart-line-up-fill mr-3"></i> Family Progress
+                        <a href="#" class="sidebar-link flex items-center py-3 px-4 rounded-lg text-slate-700 hover:bg-slate-100 transition duration-200" data-tab="progress">
+                            <i class="ph-chart-line-up-fill mr-3 text-lg"></i> Family Progress
                         </a>
                     </nav>
                 </div>
-                <div id="user-info-sidebar" class="p-4 border-t border-gray-700"></div>
+                <div id="user-info-sidebar" class="p-4 border-t border-slate-200"></div>
             </div>
 
             <!-- Mobile Sidebar -->
             <div id="mobile-sidebar" class="fixed inset-0 flex z-40 md:hidden transform -translate-x-full transition-transform duration-300 ease-in-out">
-                <div class="w-64 bg-gray-800 text-white flex-shrink-0">
-                    <div class="flex items-center justify-between h-20 border-b border-gray-700 px-6">
+                <div class="w-64 bg-white text-slate-700 flex-shrink-0 border-r border-slate-200">
+                    <div class="flex items-center justify-between h-20 border-b border-slate-200 px-6">
                         <div class="flex items-center">
                             <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-12 w-auto">
-                            <span class="ml-3 font-semibold text-xl">Admin</span>
+                            <span class="ml-3 font-semibold text-xl text-slate-800">Admin</span>
                         </div>
-                        <button id="mobile-close-button" class="text-gray-400 hover:text-white">
+                        <button id="mobile-close-button" class="text-slate-500 hover:text-slate-800">
                             <i class="ph-x text-2xl"></i>
                         </button>
                     </div>
                     <div class="flex-grow">
-                        <nav id="mobile-sidebar-nav" class="mt-10">
+                        <nav id="mobile-sidebar-nav" class="mt-6 px-4 space-y-2">
                            <!-- Mobile links will be injected here by JS -->
                         </nav>
                     </div>
@@ -104,12 +123,12 @@
 
             <!-- Main Content -->
             <div class="flex flex-col flex-1 overflow-y-auto">
-                <div class="flex items-center justify-between h-20 bg-white border-b px-6">
-                     <button id="mobile-menu-button" class="md:hidden text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600">
+                <div class="flex items-center justify-between h-20 bg-white border-b border-slate-200 px-6 sticky top-0 z-30">
+                     <button id="mobile-menu-button" class="md:hidden text-slate-500 hover:text-slate-600 focus:outline-none focus:text-slate-600">
                         <i class="ph-list text-2xl"></i>
                     </button>
-                    <h1 id="page-title" class="text-2xl font-semibold text-gray-800">Dashboard</h1>
-                    <button onclick="signOut();" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">Sign Out</button>
+                    <h1 id="page-title" class="text-2xl font-semibold text-slate-900">Dashboard</h1>
+                    <button onclick="signOut();" class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition duration-300">Sign Out</button>
                 </div>
                 
                 <main class="p-6 sm:p-10 space-y-6">
@@ -125,8 +144,39 @@
         </div>
     </div>
     
-    <!-- Modal Placeholder -->
-    <div id="modal-placeholder"></div>
+    <!-- Modal for Create Event -->
+    <div id="event-modal" class="modal">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl">
+            <h2 class="text-xl font-semibold mb-4">Create New Event</h2>
+            <form id="event-form" class="space-y-4">
+                <div>
+                    <label for="event-id" class="block text-sm font-medium text-slate-700">Event ID (e.g., E101)</label>
+                    <input type="text" id="event-id" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                </div>
+                <div>
+                    <label for="event-name" class="block text-sm font-medium text-slate-700">Event Name</label>
+                    <input type="text" id="event-name" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                </div>
+                <div>
+                    <label for="event-date" class="block text-sm font-medium text-slate-700">Event Date</label>
+                    <input type="date" id="event-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required>
+                </div>
+                <div>
+                    <label for="event-grade" class="block text-sm font-medium text-slate-700">Grade (Optional - e.g., K, 1, 5)</label>
+                    <input type="text" id="event-grade" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                </div>
+                <div>
+                    <label for="event-classroom" class="block text-sm font-medium text-slate-700">Classroom (Optional - e.g., A)</label>
+                    <input type="text" id="event-classroom" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                </div>
+                <div class="flex justify-end gap-4 mt-6">
+                    <button type="button" onclick="closeModal('event-modal')" class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Cancel</button>
+                    <button type="submit" id="save-event-btn" class="bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700">Save Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <script>
         const ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyXR747DT2sH_K-rvtoKEObWo5OYUpgUhBMWG7zwm4B3uliAGLZ1Jq0bZ2onc_U-8g/exec';
@@ -142,7 +192,7 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('loading-overlay').classList.remove('hidden');
 
-            const userInfoHtml = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${profile.picture}" alt=""><div class="ml-3"><div class="text-sm font-medium">${profile.name}</div><div class="text-xs text-gray-400">${profile.email}</div></div></div>`;
+            const userInfoHtml = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${profile.picture}" alt=""><div class="ml-3"><div class="text-sm font-medium text-slate-800">${profile.name}</div><div class="text-xs text-slate-500">${profile.email}</div></div></div>`;
             document.getElementById('user-info-sidebar').innerHTML = userInfoHtml;
 
             fetchAdminData(ID_TOKEN);
@@ -154,15 +204,16 @@
         }
         
         function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
+            document.getElementById(modalId).classList.add('flex');
         }
 
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            document.getElementById(modalId).classList.remove('flex');
         }
 
         // --- DATA FETCH & RENDER ---
         function fetchAdminData(token) {
+            document.getElementById('loading-overlay').classList.remove('hidden');
             fetch(`${ADMIN_WEB_APP_URL}?token=${token}`)
                 .then(response => response.json())
                 .then(data => {
@@ -177,8 +228,30 @@
                 })
                 .catch(error => {
                     console.error('Admin Fetch Error:', error);
-                    document.getElementById('loading-overlay').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg max-w-sm w-full"><img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4"><h1 class="text-xl font-bold text-red-600">Access Denied</h1><p class="text-gray-600 mt-2">${error.message}</p><button onclick="window.location.reload();" class="mt-6 bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Try Again</button></div>`;
+                    document.getElementById('loading-overlay').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg max-w-sm w-full"><img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4"><h1 class="text-xl font-bold text-red-600">Access Denied</h1><p class="text-slate-600 mt-2">${error.message}</p><button onclick="window.location.reload();" class="mt-6 bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Try Again</button></div>`;
                 });
+        }
+        
+        // New function to handle POST data
+        function postAdminData(payload, successMessage) {
+            return new Promise((resolve, reject) => {
+                fetch(ADMIN_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Use text/plain for no-cors
+                    body: JSON.stringify(payload)
+                })
+                .then(() => {
+                    alert(successMessage);
+                    fetchAdminData(ID_TOKEN); // Refresh all data
+                    resolve();
+                })
+                .catch(error => {
+                    console.error('POST Error:', error);
+                    alert(`An error occurred: ${error.message}`);
+                    reject(error);
+                });
+            });
         }
 
         function renderAllTabs() {
@@ -207,30 +280,30 @@
 
             container.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S1 Completed Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s1Completed}</p></div>
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S1 In-Progress Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s1InProgress}</p></div>
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S1 Vacant Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s1Vacant}</p></div>
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S2 Completed Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s2Completed}</p></div>
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S2 In-Progress Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s2InProgress}</p></div>
-                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-gray-500 text-sm font-medium">S2 Vacant Hours</h3><p class="text-3xl font-bold text-gray-800 mt-2">${s2Vacant}</p></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="text-slate-500 text-sm font-medium">S1 Completed Hours</h3><p class="text-3xl font-bold text-slate-900 mt-2">${s1Completed}</p></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="text-slate-500 text-sm font-medium">S1 In-Progress Hours</h3><p class="text-3xl font-bold text-slate-900 mt-2">${s1InProgress}</p></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="text-slate-500 text-sm font-medium">S1 Vacant Hours</h3><p class="text-3xl font-bold text-slate-900 mt-2">${s1Vacant}</p></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="text-slate-500 text-sm font-medium">S2 Completed Hours</h3><p class="text-3xl font-bold text-slate-900 mt-2">${s2Completed}</p></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="text-slate-500 text-sm font-medium">S2 In-Progress Hours</h3><p class="text-3xl font-bold text-slate-900 mt-2">${s2InProgress}</p></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="text-slate-500 text-sm font-medium">S2 Vacant Hours</h3><p class="text-3xl font-bold text-slate-900 mt-2">${s2Vacant}</p></div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-xl font-semibold mb-4">Volunteer Hours Overview</h3>
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-4 text-slate-900">Volunteer Hours Overview</h3>
                         <canvas id="hoursChart"></canvas>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-xl font-semibold mb-4">Families with Hours Remaining</h3>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-xl font-semibold mb-4 text-slate-900">Families with Hours Remaining</h3>
                         <div class="space-y-4">
                             <div>
-                                <label for="hours-slider-s1" class="block text-sm font-medium text-gray-700">Semester 1: More than <span id="slider-value-s1" class="font-bold text-teal-600">8</span> hrs remaining</label>
-                                <input id="hours-slider-s1" type="range" min="0" max="20" value="8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
-                                <p class="text-center text-4xl font-bold text-gray-800 mt-2" id="families-remaining-count-s1">--</p>
+                                <label for="hours-slider-s1" class="block text-sm font-medium text-slate-700">Semester 1: More than <span id="slider-value-s1" class="font-bold text-teal-600">8</span> hrs remaining</label>
+                                <input id="hours-slider-s1" type="range" min="0" max="20" value="8" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer mt-2">
+                                <p class="text-center text-4xl font-bold text-slate-800 mt-2" id="families-remaining-count-s1">--</p>
                             </div>
                             <div>
-                                <label for="hours-slider-s2" class="block text-sm font-medium text-gray-700">Semester 2: More than <span id="slider-value-s2" class="font-bold text-teal-600">8</span> hrs remaining</label>
-                                <input id="hours-slider-s2" type="range" min="0" max="20" value="8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
-                                <p class="text-center text-4xl font-bold text-gray-800 mt-2" id="families-remaining-count-s2">--</p>
+                                <label for="hours-slider-s2" class="block text-sm font-medium text-slate-700">Semester 2: More than <span id="slider-value-s2" class="font-bold text-teal-600">8</span> hrs remaining</label>
+                                <input id="hours-slider-s2" type="range" min="0" max="20" value="8" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer mt-2">
+                                <p class="text-center text-4xl font-bold text-slate-800 mt-2" id="families-remaining-count-s2">--</p>
                             </div>
                         </div>
                     </div>
@@ -250,7 +323,7 @@
                             label: 'Total Required',
                             data: [s1TotalRequired, s2TotalRequired],
                             type: 'line',
-                            borderColor: '#4b5563',
+                            borderColor: '#475569',
                             borderDash: [5, 5],
                             fill: false,
                             tension: 0.1
@@ -286,27 +359,27 @@
         function renderEventsTab() {
             const container = document.getElementById('events');
             const tableRows = adminData.events.map(event => `
-                <tr class="border-b">
+                <tr class="border-b border-slate-200 hover:bg-slate-50">
                     <td class="py-3 px-4">${event.eventname}</td>
                     <td class="py-3 px-4">${new Date(event.eventdate).toLocaleDateString()}</td>
                     <td class="py-3 px-4">${event.grade || 'All'}</td>
                     <td class="py-3 px-4">${event.classroom || 'All'}</td>
-                    <td class="py-3 px-4">${event.eventid}</td>
+                    <td class="py-3 px-4 font-mono text-xs">${event.eventid}</td>
                     <td class="py-3 px-4 text-right">
-                        <button class="text-blue-500 hover:underline mr-4">Edit</button>
-                        <button class="text-red-500 hover:underline">Delete</button>
+                        <button class="text-blue-600 hover:underline font-medium mr-4">Edit</button>
+                        <button class="text-red-600 hover:underline font-medium">Delete</button>
                     </td>
                 </tr>
             `).join('');
 
-            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold">Manage Events</h2>
-                    <button class="bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700">Create Event</button>
+            container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-slate-900">Manage Events</h2>
+                    <button id="create-event-btn" class="w-full sm:w-auto mt-4 sm:mt-0 bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors">Create Event</button>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-50"><tr>
+                    <table class="w-full text-sm text-left text-slate-700">
+                        <thead class="bg-slate-50 text-xs text-slate-500 uppercase"><tr>
                             <th class="py-3 px-4">Name</th><th class="py-3 px-4">Date</th><th class="py-3 px-4">Grade</th><th class="py-3 px-4">Class</th><th class="py-3 px-4">ID</th><th class="py-3 px-4"></th>
                         </tr></thead>
                         <tbody>${tableRows}</tbody>
@@ -317,319 +390,107 @@
 
         function renderVolunteeringTab() {
             const container = document.getElementById('volunteering');
-            const tableRows = adminData.volunteering.map(opp => `
-                <tr class="border-b">
-                    <td class="py-3 px-4">${opp.title}</td>
-                    <td class="py-3 px-4">${new Date(opp.date).toLocaleDateString()}</td>
-                    <td class="py-3 px-4">${opp.time}</td>
-                    <td class="py-3 px-4">${opp.signedupvolunteers} / ${opp.neededvolunteers}</td>
-                    <td class="py-3 px-4">${opp.opportunityid}</td>
-                    <td class="py-3 px-4 text-right">
-                        <button class="text-blue-500 hover:underline mr-4">Edit</button>
-                        <button class="text-red-500 hover:underline">Delete</button>
-                    </td>
-                </tr>
+            const opportunityCards = adminData.volunteering.map(opp => `
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div class="mb-4 sm:mb-0">
+                        <h3 class="font-semibold text-lg text-slate-900">${opp.title}</h3>
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 mt-1">
+                            <span><i class="ph-calendar-blank mr-1"></i>${new Date(opp.date).toLocaleDateString()}</span>
+                            <span><i class="ph-clock mr-1"></i>${opp.time}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div class="text-sm sm:text-right">
+                            <span class="font-bold text-xl text-teal-600">${opp.signedupvolunteers}</span>
+                            <span class="text-slate-500">/ ${opp.neededvolunteers} Spots Filled</span>
+                        </div>
+                        <div class="flex-shrink-0 flex gap-2">
+                            <button class="text-blue-600 hover:underline font-medium">Edit</button>
+                            <button class="text-red-600 hover:underline font-medium">Delete</button>
+                        </div>
+                    </div>
+                </div>
             `).join('');
 
-            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold">Manage Volunteering</h2>
-                    <button class="bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700">Create Opportunity</button>
+            container.innerHTML = `<div class="space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center">
+                    <h2 class="text-2xl font-semibold text-slate-900">Manage Volunteering</h2>
+                    <button class="w-full sm:w-auto mt-4 sm:mt-0 bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors">Create Opportunity</button>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-50"><tr>
-                            <th class="py-3 px-4">Title</th><th class="py-3 px-4">Date</th><th class="py-3 px-4">Time</th><th class="py-3 px-4">Spots</th><th class="py-3 px-4">ID</th><th class="py-3 px-4"></th>
-                        </tr></thead>
-                        <tbody>${tableRows}</tbody>
-                    </table>
-                </div>
+                <div class="space-y-4">${opportunityCards}</div>
             </div>`;
         }
         
-        /**
-            function renderSignupsTab() {
-            const container = document.getElementById('signups-admin');
-            const eventOptions = adminData.events.map(event => `<option value="${event.eventid}">${event.eventname}</option>`).join('');
-
-            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold">Signed Up Families</h2>
-                    <select id="signup-event-filter" class="w-1/3 rounded-md border-gray-300 shadow-sm">
-                        <option value="all">All Events</option>
-                        ${eventOptions}
-                    </select>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-50"><tr>
-                            <th class="py-3 px-4">Family ID</th>
-                            <th class="py-3 px-4">Parent Email</th>
-                            <th class="py-3 px-4">Task</th>
-                            <th class="py-3 px-4">Time</th>
-                            <th class="py-3 px-4">Description</th>
-                            <th class="py-3 px-4">Status</th>
-                        </tr></thead>
-                        <tbody id="signups-tbody"></tbody>
-                    </table>
-                </div>
-            </div>`;
-            renderSignupsTable('all');
-        }
-*/
-/**
-      function renderSignupsTab() {
-    const container = document.getElementById('signups-admin');
-    if (!adminData.events || !adminData.signups || !adminData.familyDetails || !adminData.volunteering) {
-        container.innerHTML = '<div class="bg-white p-6 rounded-lg shadow"><p>No signup data available to display.</p></div>';
-        return;
-    }
-
-    // 1. Create a robust lookup map for all volunteering opportunities, just like in the table function.
-    const volunteeringMap = adminData.volunteering.reduce((map, opp) => {
-        if (opp.opportunityid) {
-            map[String(opp.opportunityid).trim()] = opp;
-        }
-        return map;
-    }, {});
-
-    // 2. Group signups by their eventId, which we find from the volunteeringMap.
-    const signupsByEvent = adminData.signups.reduce((acc, signup) => {
-        const oppDetails = volunteeringMap[String(signup.opportunityid).trim()];
-        const eventId = oppDetails ? oppDetails.eventid : 'general';
-        if (!acc[eventId]) acc[eventId] = [];
-        acc[eventId].push(signup);
-        return acc;
-    }, {});
-
-    const eventNameMap = adminData.events.reduce((map, event) => {
-        map[String(event.eventid).trim()] = event.eventname;
-        return map;
-    }, {});
-
-    // 3. Create a collapsible card for each event that has signups.
-    const eventCardsHtml = Object.keys(signupsByEvent).map((eventId, index) => {
-        const eventSignups = signupsByEvent[eventId];
-        const eventName = eventNameMap[eventId] || 'General Opportunities';
-
-        const familiesInEvent = eventSignups.reduce((acc, signup) => {
-            const familyId = signup.familyid;
-            if (familyId) {
-                if (!acc[familyId]) acc[familyId] = [];
-                acc[familyId].push(signup);
-            }
-            return acc;
-        }, {});
-
-        const familyCardsHtml = Object.entries(familiesInEvent).map(([familyId, signups]) => {
-            const familyDetails = adminData.familyDetails[familyId] || { students: ['N/A'] };
-            const studentNames = familyDetails.students.join(', ');
-            const parentEmail = signups[0].parentemail; 
-
-            const taskHtml = signups.map(s => {
-                const oppDetails = volunteeringMap[String(s.opportunityid).trim()] || {}; // Perform the lookup here
-                return `
-                    <div class="border-t mt-2 pt-2">
-                        <p class="font-semibold">${oppDetails.title || 'N/A'} (${oppDetails.time || 'N/A'})</p>
-                        <p class="text-xs text-gray-500">${oppDetails.description || 'N/A'}</p>
-                        <p class="text-xs mt-1">Status: <span class="font-medium">${s.status}</span></p>
-                    </div>`;
-            }).join('');
-
-            return `<div class="bg-white p-4 rounded-lg shadow-sm">
-                        <h5 class="font-bold text-gray-800">Family ID: ${familyId}</h5>
-                        <p class="text-sm text-gray-600">${parentEmail}</p>
-                        <p class="text-sm text-gray-500 mt-1">Students: ${studentNames}</p>
-                        ${taskHtml}
-                    </div>`;
-        }).join('');
-
-        return `<div class="bg-gray-100 rounded-lg shadow-sm">
-                    <div class="p-4 border-b border-gray-200 cursor-pointer flex justify-between items-center event-card-header" data-target="family-group-${index}">
-                        <h3 class="text-xl font-bold text-gray-900">${eventName}</h3>
-                        <i class="ph-caret-down text-2xl transition-transform"></i>
-                    </div>
-                    <div id="family-group-${index}" class="hidden p-4 space-y-4 bg-gray-50">
-                        ${familyCardsHtml}
-                    </div>
-                </div>`;
-    }).join('');
-
-    container.innerHTML = `<div class="space-y-4">${eventCardsHtml || '<p>No families have signed up for any events yet.</p>'}</div>`;
-}
-   
-*/
-
 function renderSignupsTab() {
     const container = document.getElementById('signups-admin');
     if (!adminData.events || !adminData.signups || !adminData.familyDetails || !adminData.volunteering) {
-        container.innerHTML = '<div class="bg-white p-6 rounded-lg shadow"><p>No signup data available to display.</p></div>';
+        container.innerHTML = '<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><p>No signup data available to display.</p></div>';
         return;
     }
-
-    // 1. Create a lookup map to find the eventId for each opportunityId from the volunteering data.
     const oppToEventMap = adminData.volunteering.reduce((map, opp) => {
-        if (opp.opportunityid) {
-            map[String(opp.opportunityid).trim()] = String(opp.eventid).trim();
-        }
+        if (opp.opportunityid) { map[String(opp.opportunityid).trim()] = String(opp.eventid).trim(); }
         return map;
     }, {});
-
-    // 2. Now, group the signups by the eventId found in the lookup map.
     const signupsByEvent = adminData.signups.reduce((acc, signup) => {
         const oppId = String(signup.opportunityid).trim();
-        const eventId = oppToEventMap[oppId] || 'general'; // Use the map to find the correct eventId
+        const eventId = oppToEventMap[oppId] || 'general';
         if (!acc[eventId]) acc[eventId] = [];
         acc[eventId].push(signup);
         return acc;
     }, {});
-
-    // ... The rest of the function now receives correctly grouped data and will work as intended ...
     const eventNameMap = adminData.events.reduce((map, event) => {
         map[String(event.eventid).trim()] = event.eventname;
         return map;
     }, {});
-
     const volunteeringMap = adminData.volunteering.reduce((map, opp) => {
-        if (opp.opportunityid) {
-            map[String(opp.opportunityid).trim()] = opp;
-        }
+        if (opp.opportunityid) { map[String(opp.opportunityid).trim()] = opp; }
         return map;
     }, {});
-
     const eventCardsHtml = Object.keys(signupsByEvent).map((eventId, index) => {
         const eventSignups = signupsByEvent[eventId];
         const eventName = eventNameMap[eventId] || 'General Opportunities';
-
         const opportunitiesInEvent = eventSignups.reduce((acc, signup) => {
             const oppId = String(signup.opportunityid).trim();
-            if (oppId) {
-                if (!acc[oppId]) acc[oppId] = [];
-                acc[oppId].push(signup);
-            }
+            if (oppId) { if (!acc[oppId]) acc[oppId] = []; acc[oppId].push(signup); }
             return acc;
         }, {});
-
         const opportunityCardsHtml = Object.entries(opportunitiesInEvent).map(([oppId, signups]) => {
             const oppDetails = volunteeringMap[oppId] || {};
-            
-           /** const familyListHtml = signups.map(s => {
-                const familyDetails = adminData.familyDetails[s.familyid] || { students: ['N/A'] };
-                const studentNames = familyDetails.students.join(', ');
-                return `
-                    <div class="border-t mt-2 pt-2">
-                        <p class="font-semibold text-sm">${s.parentemail}</p>
-                        <p class="text-xs text-gray-600">Family ID: ${s.familyid} | Students: ${studentNames}</p>
-                    </div>
-                `;
-            }).join('');
-*/
             const familyListHtml = signups.map(s => {
                 const familyDetails = adminData.familyDetails[s.familyid] || { students: ['N/A'] };
                 const studentNames = familyDetails.students.join(', ');
-    
-                 // Logic to determine the color of the status badge
-                    const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : 
-                        s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 
-                        'text-gray-700 bg-gray-100';
-
-                return `
-                <div class="border-t mt-2 pt-2">
-                    <div class="flex justify-between items-center">
-                         <div>
-                            <p class="font-semibold text-sm">${s.parentemail}</p>
-                            <p class="text-xs text-gray-600">Family ID: ${s.familyid} | Students: ${studentNames}</p>
-                         </div>
-                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span>
-                    </div>
-                </div>
-            `;
+                const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
+                return `<div class="border-t border-slate-100 mt-2 pt-2"><div class="flex justify-between items-center"><div><p class="font-semibold text-sm text-slate-800">${s.parentemail}</p><p class="text-xs text-slate-500">Family ID: ${s.familyid} | Students: ${studentNames}</p></div><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span></div></div>`;
             }).join('');
-            
-            return `
-                <div class="bg-white p-4 rounded-lg shadow-sm">
-                    <h5 class="font-bold text-gray-800">${oppDetails.title || 'Unknown Task'} (${oppDetails.time || 'N/A'})</h5>
-                    <p class="text-sm text-gray-500 mt-1">${oppDetails.description || ''}</p>
-                    <div class="mt-2">
-                        <h6 class="text-xs font-semibold text-gray-600 uppercase">Signed-up Families:</h6>
-                        <div class="space-y-2">${familyListHtml}</div>
-                    </div>
-                </div>
-            `;
+            return `<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200"><h5 class="font-bold text-slate-800">${oppDetails.title || 'Unknown Task'} (${oppDetails.time || 'N/A'})</h5><p class="text-sm text-slate-500 mt-1">${oppDetails.description || ''}</p><div class="mt-2"><h6 class="text-xs font-semibold text-slate-600 uppercase">Signed-up Families:</h6><div class="space-y-2">${familyListHtml}</div></div></div>`;
         }).join('');
-
-        return `
-            <div class="bg-gray-100 rounded-lg shadow-sm">
-                <div class="p-4 border-b border-gray-200 cursor-pointer flex justify-between items-center event-card-header" data-target="opportunity-group-${index}">
-                    <h3 class="text-xl font-bold text-gray-900">${eventName}</h3>
-                    <i class="ph-caret-down text-2xl transition-transform"></i>
-                </div>
-                <div id="opportunity-group-${index}" class="hidden p-4 space-y-4 bg-gray-50">
-                    ${opportunityCardsHtml}
-                </div>
-            </div>`;
+        return `<div class="bg-slate-50 rounded-lg shadow-sm border border-slate-200 overflow-hidden"><div class="p-4 border-b border-slate-200 cursor-pointer flex justify-between items-center event-card-header" data-target="opportunity-group-${index}"><h3 class="text-xl font-bold text-slate-900">${eventName}</h3><i class="ph-caret-down text-2xl transition-transform"></i></div><div id="opportunity-group-${index}" class="hidden p-4 space-y-4 bg-slate-50">${opportunityCardsHtml}</div></div>`;
     }).join('');
-
     container.innerHTML = `<div class="space-y-4">${eventCardsHtml || '<p>No families have signed up for any events yet.</p>'}</div>`;
 }
 
-
-        
         function renderEventStatusTab() {
             const container = document.getElementById('event-status');
              const eventOptions = adminData.events.map(event => `<option value="${event.eventid}">${event.eventname}</option>`).join('');
 
-            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold">Event Signup Status</h2>
-                    <select id="event-status-filter" class="w-1/3 rounded-md border-gray-300 shadow-sm">
+            container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-slate-900">Event Signup Status</h2>
+                    <select id="event-status-filter" class="w-full sm:w-1/3 mt-4 sm:mt-0 rounded-md border-slate-300 shadow-sm">
                         <option value="all">Select an Event</option>
                         ${eventOptions}
                     </select>
                 </div>
                 <div id="event-status-display">
-                    <p class="text-gray-500">Select an event from the dropdown to see its status.</p>
+                    <p class="text-slate-500">Select an event from the dropdown to see its status.</p>
                 </div>
             </div>`;
         }
 
-
-        function renderSignupsTable(eventId) {
-    const tbody = document.getElementById('signups-tbody');
-    if (!tbody || !adminData.volunteering || !adminData.signups) return;
-
-    // 1. Create a quick lookup map of all volunteering opportunities.
-    const volunteeringMap = adminData.volunteering.reduce((map, opp) => {
-        map[opp.opportunityid] = opp;
-        return map;
-    }, {});
-
-    // 2. Filter the signups based on the selected event.
-    const filteredSignups = (eventId === 'all')
-        ? adminData.signups
-        : adminData.signups.filter(s => {
-            const opp = volunteeringMap[s.opportunityid];
-            return opp && opp.eventid === eventId;
-        });
-
-    // 3. For each signup, find the details from the map and render the row.
-    tbody.innerHTML = filteredSignups.map(signup => {
-        const oppDetails = volunteeringMap[signup.opportunityid] || {}; // Find details using the map
-        return `<tr class="border-b">
-            <td class="py-3 px-4 font-mono">${signup.familyid}</td>
-            <td class="py-3 px-4">${signup.parentemail}</td>
-            <td class="py-3 px-4">${oppDetails.title || 'N/A'}</td>
-            <td class="py-3 px-4">${oppDetails.time || 'N/A'}</td>
-            <td class="py-3 px-4 text-xs">${oppDetails.description || 'N/A'}</td>
-            <td class="py-3 px-4">${signup.status}</td>
-        </tr>`;
-    }).join('');
-}
-
         function renderExpensesTab() {
             const container = document.getElementById('expenses');
             const tableRows = adminData.expenses.map(exp => `
-                <tr class="border-b">
+                <tr class="border-b border-slate-200 hover:bg-slate-50">
                     <td class="py-3 px-4">${new Date(exp.date).toLocaleDateString()}</td>
                     <td class="py-3 px-4">${exp.submittedby}</td>
                     <td class="py-3 px-4">${exp.item}</td>
@@ -639,24 +500,24 @@ function renderSignupsTab() {
             `).join('');
 
             container.innerHTML = `<div class="grid md:grid-cols-3 gap-6">
-                <div class="md:col-span-2 bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold mb-4">Expense History</h2>
+                <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-900">Expense History</h2>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
-                            <thead class="bg-gray-50"><tr>
+                        <table class="w-full text-sm text-left text-slate-700">
+                            <thead class="bg-slate-50 text-xs text-slate-500 uppercase"><tr>
                                 <th class="py-3 px-4">Date</th><th class="py-3 px-4">Submitted By</th><th class="py-3 px-4">Item</th><th class="py-3 px-4">Amount</th><th class="py-3 px-4">Status</th>
                             </tr></thead>
                             <tbody>${tableRows}</tbody>
                         </table>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold mb-4">Report New Expense</h2>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-900">Report New Expense</h2>
                     <form id="expense-form" class="space-y-4">
-                        <div><label class="block text-sm font-medium">Item</label><input type="text" id="expense-item" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
-                        <div><label class="block text-sm font-medium">Description</label><textarea id="expense-desc" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea></div>
-                        <div><label class="block text-sm font-medium">Category</label><input type="text" id="expense-cat" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></div>
-                        <div><label class="block text-sm font-medium">Amount</label><input type="number" step="0.01" id="expense-amount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required></div>
+                        <div><label class="block text-sm font-medium">Item</label><input type="text" id="expense-item" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required></div>
+                        <div><label class="block text-sm font-medium">Description</label><textarea id="expense-desc" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea></div>
+                        <div><label class="block text-sm font-medium">Category</label><input type="text" id="expense-cat" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></div>
+                        <div><label class="block text-sm font-medium">Amount</label><input type="number" step="0.01" id="expense-amount" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm" required></div>
                         <button type="submit" class="w-full bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700">Submit Expense</button>
                     </form>
                 </div>
@@ -666,7 +527,7 @@ function renderSignupsTab() {
         function renderFamilyProgressTab() {
             const container = document.getElementById('progress');
             const tableRows = Object.entries(adminData.familyProgress).map(([familyId, data]) => `
-                <tr class="border-b family-row" data-family-id="${familyId}">
+                <tr class="border-b border-slate-200 family-row hover:bg-slate-50" data-family-id="${familyId}">
                     <td class="py-3 px-4 font-mono">${familyId}</td>
                     <td class="py-3 px-4 text-center">${data.progress.semester1.completed}</td>
                     <td class="py-3 px-4 text-center">${data.progress.semester1.inProgress}</td>
@@ -679,20 +540,20 @@ function renderSignupsTab() {
                 </tr>
             `).join('');
 
-            container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold">Family Progress</h2>
-                    <input type="text" id="family-search" placeholder="Search by Family ID..." class="w-1/3 rounded-md border-gray-300 shadow-sm">
+            container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-slate-900">Family Progress</h2>
+                    <input type="text" id="family-search" placeholder="Search by Family ID..." class="w-full sm:w-1/3 mt-4 sm:mt-0 rounded-md border-slate-300 shadow-sm">
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-50"><tr>
+                    <table class="w-full text-sm text-left text-slate-700">
+                        <thead class="bg-slate-50 text-xs text-slate-500 uppercase"><tr>
                             <th rowspan="2" class="py-3 px-4 align-bottom">Family ID</th>
-                            <th colspan="4" class="py-3 px-4 text-center border-b border-l">Semester 1</th>
-                            <th colspan="4" class="py-3 px-4 text-center border-b border-l">Semester 2</th>
+                            <th colspan="4" class="py-3 px-4 text-center border-b border-l border-slate-200">Semester 1</th>
+                            <th colspan="4" class="py-3 px-4 text-center border-b border-l border-slate-200">Semester 2</th>
                         </tr><tr>
-                            <th class="py-2 px-4 text-center font-normal text-xs border-l">Completed</th><th class="py-2 px-4 text-center font-normal text-xs">In Progress</th><th class="py-2 px-4 text-center font-normal text-xs">Penalty</th><th class="py-2 px-4 text-center font-normal text-xs">Total Req.</th>
-                            <th class="py-2 px-4 text-center font-normal text-xs border-l">Completed</th><th class="py-2 px-4 text-center font-normal text-xs">In Progress</th><th class="py-2 px-4 text-center font-normal text-xs">Penalty</th><th class="py-2 px-4 text-center font-normal text-xs">Total Req.</th>
+                            <th class="py-2 px-4 text-center font-normal border-l border-slate-200">Completed</th><th class="py-2 px-4 text-center font-normal">In Progress</th><th class="py-2 px-4 text-center font-normal">Penalty</th><th class="py-2 px-4 text-center font-normal">Total Req.</th>
+                            <th class="py-2 px-4 text-center font-normal border-l border-slate-200">Completed</th><th class="py-2 px-4 text-center font-normal">In Progress</th><th class="py-2 px-4 text-center font-normal">Penalty</th><th class="py-2 px-4 text-center font-normal">Total Req.</th>
                         </tr></thead>
                         <tbody id="family-progress-tbody">${tableRows}</tbody>
                     </table>
@@ -709,62 +570,119 @@ function renderSignupsTab() {
         // --- EVENT LISTENERS ---
         function addEventListeners() {
 
+            // Main click listener for dynamic content
             document.body.addEventListener('click', e => {
-    // ... existing button logic ...
+                const button = e.target.closest('button');
+                if (!button) {
+                    // Close modal if clicking outside the content
+                    if(e.target.closest('.modal')) {
+                        closeModal(e.target.closest('.modal').id);
+                    }
+                    return;
+                }
 
-    // NEW: Handles the event card collapse/expand in the "Signed Up Families" tab
-    const header = e.target.closest('.event-card-header');
-    if (header) {
-        const targetId = header.dataset.target;
-        const content = document.getElementById(targetId);
-        const icon = header.querySelector('i');
-        if (content) {
-            content.classList.toggle('hidden');
-            icon.classList.toggle('rotate-180');
-        }
-    }
-});
+                // Create Event Button
+                if (button.id === 'create-event-btn') {
+                    openModal('event-modal');
+                }
 
-            
-            document.getElementById('sidebar-nav').addEventListener('click', e => {
-                const link = e.target.closest('.sidebar-link');
-                if (link) {
+                // Sidebar navigation
+                const sidebarLink = e.target.closest('.sidebar-link');
+                if (sidebarLink) {
                     e.preventDefault();
                     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                    link.classList.add('active');
-                    const tabId = link.dataset.tab;
-                    document.getElementById('page-title').textContent = link.textContent.trim();
+                    sidebarLink.classList.add('active');
+                    
+                    const tabId = sidebarLink.dataset.tab;
+                    document.getElementById('page-title').textContent = sidebarLink.textContent.trim();
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content-active'));
                     document.getElementById(tabId).classList.add('tab-content-active');
-                }
-            });
-            
-            document.getElementById('mobile-sidebar-nav').addEventListener('click', e => {
-                const link = e.target.closest('.sidebar-link');
-                if (link) {
-                    e.preventDefault();
+
+                    // Close mobile sidebar if open
                     document.getElementById('mobile-sidebar').classList.add('-translate-x-full');
-                    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-                    document.querySelector(`.sidebar-link[data-tab="${link.dataset.tab}"]`).classList.add('active');
-                    const tabId = link.dataset.tab;
-                    document.getElementById('page-title').textContent = link.textContent.trim();
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content-active'));
-                    document.getElementById(tabId).classList.add('tab-content-active');
+                }
+
+                // Mobile menu toggles
+                if (button.id === 'mobile-menu-button') {
+                    document.getElementById('mobile-sidebar').classList.remove('-translate-x-full');
+                }
+                if (button.id === 'mobile-close-button' || e.target.id === 'mobile-sidebar-overlay') {
+                    document.getElementById('mobile-sidebar').classList.add('-translate-x-full');
+                }
+
+                // Card expand/collapse
+                const header = e.target.closest('.event-card-header');
+                if (header) {
+                    const targetId = header.dataset.target;
+                    const content = document.getElementById(targetId);
+                    const icon = header.querySelector('i');
+                    if (content) {
+                        content.classList.toggle('hidden');
+                        icon.classList.toggle('rotate-180');
+                    }
                 }
             });
 
+            // Form Submissions
+            document.getElementById('event-form').addEventListener('submit', e => {
+                e.preventDefault();
+                const button = document.getElementById('save-event-btn');
+                button.textContent = 'Saving...';
+                button.disabled = true;
+
+                const eventData = {
+                    eventid: document.getElementById('event-id').value,
+                    eventname: document.getElementById('event-name').value,
+                    eventdate: document.getElementById('event-date').value,
+                    grade: document.getElementById('event-grade').value,
+                    classroom: document.getElementById('event-classroom').value
+                };
+
+                const payload = {
+                    action: 'addEvent',
+                    data: eventData,
+                    token: ID_TOKEN
+                };
+                
+                postAdminData(payload, 'Event created successfully! Refreshing data...')
+                    .then(() => {
+                        closeModal('event-modal');
+                        document.getElementById('event-form').reset();
+                    })
+                    .finally(() => {
+                        button.textContent = 'Save Event';
+                        button.disabled = false;
+                    });
+            });
+
+            document.getElementById('expense-form').addEventListener('submit', e => {
+                e.preventDefault();
+                const button = e.target.querySelector('button[type="submit"]');
+                button.textContent = 'Submitting...';
+                button.disabled = true;
+
+                const expenseData = {
+                    item: document.getElementById('expense-item').value,
+                    description: document.getElementById('expense-desc').value,
+                    category: document.getElementById('expense-cat').value,
+                    amount: document.getElementById('expense-amount').value
+                };
+
+                const payload = {
+                    action: 'addExpense',
+                    data: expenseData,
+                    token: ID_TOKEN
+                };
+
+                postAdminData(payload, 'Expense submitted! Refreshing data...')
+                    .then(() => document.getElementById('expense-form').reset())
+                    .finally(() => {
+                        button.textContent = 'Submit Expense';
+                        button.disabled = false;
+                    });
+            });
             
-
-            document.getElementById('mobile-menu-button').addEventListener('click', () => {
-                document.getElementById('mobile-sidebar').classList.remove('-translate-x-full');
-            });
-            document.getElementById('mobile-close-button').addEventListener('click', () => {
-                document.getElementById('mobile-sidebar').classList.add('-translate-x-full');
-            });
-            document.getElementById('mobile-sidebar-overlay').addEventListener('click', () => {
-                document.getElementById('mobile-sidebar').classList.add('-translate-x-full');
-            });
-
+            // Input/Change Listeners
             const familySearch = document.getElementById('family-search');
             if (familySearch) {
                 familySearch.addEventListener('input', e => {
@@ -776,20 +694,13 @@ function renderSignupsTab() {
                 });
             }
             
-            const signupEventFilter = document.getElementById('signup-event-filter');
-            if(signupEventFilter) {
-                signupEventFilter.addEventListener('change', e => {
-                    renderSignupsTable(e.target.value);
-                });
-            }
-
             const eventStatusFilter = document.getElementById('event-status-filter');
             if(eventStatusFilter) {
                 eventStatusFilter.addEventListener('change', e => {
                     const eventId = e.target.value;
                     const display = document.getElementById('event-status-display');
                     if (eventId === 'all') {
-                        display.innerHTML = '<p class="text-gray-500">Select an event from the dropdown to see its status.</p>';
+                        display.innerHTML = '<p class="text-slate-500">Select an event from the dropdown to see its status.</p>';
                         return;
                     }
                     const stats = adminData.eventStats[eventId];
@@ -797,18 +708,18 @@ function renderSignupsTab() {
                         const hoursProgress = stats.hoursRequired > 0 ? (stats.hoursFilled / stats.hoursRequired) * 100 : 0;
                         const volunteerProgress = stats.totalNeeded > 0 ? (stats.totalSignedUp / stats.totalNeeded) * 100 : 0;
                         display.innerHTML = `
-                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <h4 class="font-semibold text-gray-700">Volunteer Spots</h4>
-                                    <p>${stats.totalSignedUp} / ${stats.totalNeeded} Filled</p>
-                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                    <h4 class="font-semibold text-slate-700">Volunteer Spots</h4>
+                                    <p class="text-lg">${stats.totalSignedUp} / ${stats.totalNeeded} Filled</p>
+                                    <div class="w-full bg-slate-200 rounded-full h-2.5 mt-2">
                                         <div class="bg-teal-600 h-2.5 rounded-full" style="width: ${volunteerProgress}%"></div>
                                     </div>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold text-gray-700">Volunteer Hours</h4>
-                                    <p>${stats.hoursFilled} / ${stats.hoursRequired} Hours Filled</p>
-                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                    <h4 class="font-semibold text-slate-700">Volunteer Hours</h4>
+                                    <p class="text-lg">${stats.hoursFilled} / ${stats.hoursRequired} Hours Filled</p>
+                                    <div class="w-full bg-slate-200 rounded-full h-2.5 mt-2">
                                         <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${hoursProgress}%"></div>
                                     </div>
                                 </div>
@@ -831,7 +742,7 @@ function renderSignupsTab() {
                 });
                 google.accounts.id.renderButton(
                   document.getElementById('google-signin-button-container'),
-                  { theme: "outline", size: "large" } 
+                  { theme: "outline", size: "large", width: "300" } 
                 );
                 google.accounts.id.prompt();
             } catch (error) {
@@ -843,4 +754,3 @@ function renderSignupsTab() {
 
 </body>
 </html>
-
