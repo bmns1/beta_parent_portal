@@ -177,6 +177,23 @@
         </div>
     </div>
 
+    <!-- NEW: Modal for Updating Status -->
+    <div id="status-modal" class="modal">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl">
+            <h2 class="text-xl font-semibold mb-4">Update Status</h2>
+            <p class="text-sm text-slate-600 mb-6">Select a new status for this signup. This will update the record immediately.</p>
+            <input type="hidden" id="status-modal-signupid">
+            <div class="space-y-3">
+                <button id="status-btn-completed" class="w-full text-left bg-green-100 text-green-800 font-semibold py-3 px-4 rounded-lg hover:bg-green-200 transition">Mark as Completed</button>
+                <button id="status-btn-inprogress" class="w-full text-left bg-slate-100 text-slate-800 font-semibold py-3 px-4 rounded-lg hover:bg-slate-200 transition">Mark as In Progress</button>
+                <button id="status-btn-penalty" class="w-full text-left bg-red-100 text-red-800 font-semibold py-3 px-4 rounded-lg hover:bg-red-200 transition">Mark as Penalty</button>
+            </div>
+            <div class="mt-6 text-right">
+                <button type="button" onclick="closeModal('status-modal')" class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Cancel</button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         const ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyXR747DT2sH_K-rvtoKEObWo5OYUpgUhBMWG7zwm4B3uliAGLZ1Jq0bZ2onc_U-8g/exec';
@@ -494,7 +511,14 @@ function renderSignupsTab() {
                 const familyDetails = adminData.familyDetails[s.familyid] || { students: ['N/A'] };
                 const studentNames = familyDetails.students.join(', ');
                 const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
-                return `<div class="border-t border-slate-100 mt-2 pt-2"><div class="flex justify-between items-center"><div><p class="font-semibold text-sm text-slate-800">${s.parentemail}</p><p class="text-xs text-slate-500">Family ID: ${s.familyid} | Students: ${studentNames}</p></div><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span></div></div>`;
+                return `<div class="border-t border-slate-100 mt-2 pt-2"><div class="flex justify-between items-center"><div><p class="font-semibold text-sm text-slate-800">${s.parentemail}</p><p class="text-xs text-slate-500">Family ID: ${s.familyid} | Students: ${studentNames}</p></div>
+                            <button 
+                                class="status-btn inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor} cursor-pointer hover:opacity-80 transition-opacity"
+                                data-signup-id="${s.signupid}"
+                                data-current-status="${s.status}">
+                                ${s.status}
+                            </button>
+                        </div></div>`;
             }).join('');
             return `<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200"><h5 class="font-bold text-slate-800">${oppDetails.title || 'Unknown Task'} (${oppDetails.time || 'N/A'})</h5><p class="text-sm text-slate-500 mt-1">${oppDetails.description || ''}</p><div class="mt-2"><h6 class="text-xs font-semibold text-slate-600 uppercase">Signed-up Families:</h6><div class="space-y-2">${familyListHtml}</div></div></div>`;
         }).join('');
@@ -601,6 +625,18 @@ function renderSignupsTab() {
             mobileNav.innerHTML = desktopNav.innerHTML;
         }
 
+
+        // NEW function to call the backend for status updates
+        function updateSignupStatus(signupId, newStatus) {
+            const payload = {
+                action: 'updateSignupStatus',
+                signupId: signupId,
+                newStatus: newStatus,
+                token: ID_TOKEN
+            };
+            return postAdminData(payload, 'Status updated successfully!');
+        }
+
         // --- EVENT LISTENERS ---
         function addEventListeners() {
 
@@ -645,6 +681,38 @@ function renderSignupsTab() {
                         closeModal(e.target.id);
                     }
                     return; // Not a button, sidebar link, or backdrop click, exit
+                }
+
+                // --- NEW: Status button click ---
+                if (button.classList.contains('status-btn')) {
+                    const signupId = button.dataset.signupId;
+                    document.getElementById('status-modal-signupid').value = signupId;
+                    openModal('status-modal');
+                }
+
+                // --- NEW: Handle clicks on the new modal buttons ---
+                if (button.id.startsWith('status-btn-')) {
+                    const newStatus = button.id.split('-').pop(); // 'completed', 'inprogress', 'penalty'
+                    let formattedStatus = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+                    if (newStatus === 'inprogress') formattedStatus = 'In Progress';
+                    
+                    const signupId = document.getElementById('status-modal-signupid').value;
+                    
+                    // Disable button to prevent double-click
+                    button.disabled = true; 
+                    button.textContent = 'Updating...';
+
+                    updateSignupStatus(signupId, formattedStatus)
+                        .finally(() => {
+                            // Re-enable all buttons
+                            document.getElementById('status-btn-completed').disabled = false;
+                            document.getElementById('status-btn-completed').textContent = 'Mark as Completed';
+                            document.getElementById('status-btn-inprogress').disabled = false;
+                            document.getElementById('status-btn-inprogress').textContent = 'Mark as In Progress';
+                            document.getElementById('status-btn-penalty').disabled = false;
+                            document.getElementById('status-btn-penalty').textContent = 'Mark as Penalty';
+                            closeModal('status-modal');
+                        });
                 }
 
                 // Create Event Button
