@@ -574,8 +574,21 @@ function renderSignupsTab() {
             document.body.addEventListener('click', e => {
                 const button = e.target.closest('button');
                 const sidebarLink = e.target.closest('.sidebar-link');
+                
+                // --- Card expand/collapse (Check this first!) ---
+                const header = e.target.closest('.event-card-header');
+                if (header) {
+                    const targetId = header.dataset.target;
+                    const content = document.getElementById(targetId);
+                    const icon = header.querySelector('i');
+                    if (content) {
+                        content.classList.toggle('hidden');
+                        icon.classList.toggle('rotate-180');
+                    }
+                    return; // Action handled, exit
+                }
 
-               // --- Sidebar Navigation (Check this first!) ---
+                // --- Sidebar Navigation ---
                 if (sidebarLink) {
                     e.preventDefault();
                     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
@@ -593,7 +606,7 @@ function renderSignupsTab() {
 
                 // --- Button Checks ---
                 if (!button) {
-                    // FIX: Close modal ONLY if clicking the modal backdrop itself
+                    // Close modal ONLY if clicking the modal backdrop itself
                     if (e.target.classList.contains('modal')) {
                         closeModal(e.target.id);
                     }
@@ -611,19 +624,6 @@ function renderSignupsTab() {
                 }
                 if (button.id === 'mobile-close-button' || e.target.id === 'mobile-sidebar-overlay') {
                     document.getElementById('mobile-sidebar').classList.add('-translate-x-full');
-                }
-
-                // --- Card expand/collapse (Check this first!) ---
-                const header = e.target.closest('.event-card-header');
-                if (header) {
-                    const targetId = header.dataset.target;
-                    const content = document.getElementById(targetId);
-                    const icon = header.querySelector('i');
-                    if (content) {
-                        content.classList.toggle('hidden');
-                        icon.classList.toggle('rotate-180');
-                    }
-                    return; // Action handled, exit
                 }
             });
 
