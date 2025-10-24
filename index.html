@@ -197,6 +197,8 @@
 
     <script>
         const ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyXR747DT2sH_K-rvtoKEObWo5OYUpgUhBMWG7zwm4B3uliAGLZ1Jq0bZ2onc_U-8g/exec';
+        // --- NEW: Add the Parent Web App URL ---
+        const PARENT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
         let adminData = {};
@@ -270,6 +272,29 @@
                 });
             });
         }
+
+        // --- NEW: Function to post to the PARENT web app ---
+        function postParentData(payload, successMessage) {
+             return new Promise((resolve, reject) => {
+                fetch(PARENT_WEB_APP_URL, { // <-- Uses the new URL
+                    method: 'POST',
+                    mode: 'no-cors', // As requested
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                })
+                .then(() => {
+                    alert(successMessage);
+                    fetchAdminData(ID_TOKEN); // Refresh admin data after success
+                    resolve();
+                })
+                .catch(error => {
+                    console.error('Parent App POST Error:', error);
+                    alert(`An error occurred: ${error.message}`);
+                    reject(error);
+                });
+            });
+        }
+        // --- END OF NEW FUNCTION ---
 
         function renderAllTabs() {
             renderDashboard();
@@ -634,7 +659,7 @@ function renderSignupsTab() {
                 newStatus: newStatus,
                 token: ID_TOKEN
             };
-            return postAdminData(payload, 'Status updated successfully!');
+            return postParentData(payload, 'Status update request sent!');
         }
 
         // --- EVENT LISTENERS ---
