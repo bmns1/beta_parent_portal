@@ -118,7 +118,7 @@
                         </nav>
                     </div>
                 </div>
-                <div id="mobile-sidebar-overlay" class="flex-1 bg-black opacity-50"></div>
+                <div id="mobile-sidebar-overlay" class_3="flex-1 bg-black opacity-50"></div>
             </div>
 
             <!-- Main Content -->
@@ -390,7 +390,49 @@
 
         function renderVolunteeringTab() {
             const container = document.getElementById('volunteering');
-            const opportunityCards = adminData.volunteering.map(opp => `
+            const eventOptions = adminData.events.map(event => `<option value="${event.eventid}">${event.eventname}</option>`).join('');
+
+            container.innerHTML = `<div class="space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center">
+                    <h2 class="text-2xl font-semibold text-slate-900">Manage Volunteering</h2>
+                    <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-4 sm:mt-0">
+                        <select id="volunteering-event-filter" class="w-full sm:w-auto rounded-md border-slate-300 shadow-sm">
+                            <option value="all">All Events</option>
+                            ${eventOptions}
+                        </select>
+                        <button class="w-full sm:w-auto bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors">Create Opportunity</button>
+                    </div>
+                </div>
+                <div id="volunteering-cards-list" class="space-y-4"></div>
+            </div>`;
+            
+            applyVolunteerFilters(); // Render the initial sorted/filtered list
+        }
+        
+        function applyVolunteerFilters() {
+            const filterValue = document.getElementById('volunteering-event-filter').value;
+            
+            let opportunities = [...adminData.volunteering];
+            
+            // 1. Sort by date (ascending)
+            opportunities.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // 2. Filter by event
+            if (filterValue !== 'all') {
+                opportunities = opportunities.filter(opp => opp.eventid === filterValue);
+            }
+
+            renderVolunteerCards(opportunities);
+        }
+
+        function renderVolunteerCards(opportunities) {
+            const container = document.getElementById('volunteering-cards-list');
+            if (opportunities.length === 0) {
+                container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center text-slate-500">No volunteering opportunities found for this event.</div>`;
+                return;
+            }
+            
+            container.innerHTML = opportunities.map(opp => `
                 <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div class="mb-4 sm:mb-0">
                         <h3 class="font-semibold text-lg text-slate-900">${opp.title}</h3>
@@ -411,14 +453,6 @@
                     </div>
                 </div>
             `).join('');
-
-            container.innerHTML = `<div class="space-y-6">
-                <div class="flex flex-col sm:flex-row justify-between sm:items-center">
-                    <h2 class="text-2xl font-semibold text-slate-900">Manage Volunteering</h2>
-                    <button class="w-full sm:w-auto mt-4 sm:mt-0 bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors">Create Opportunity</button>
-                </div>
-                <div class="space-y-4">${opportunityCards}</div>
-            </div>`;
         }
         
 function renderSignupsTab() {
@@ -731,6 +765,12 @@ function renderSignupsTab() {
                         `;
                     }
                 });
+            }
+
+            // New listener for the volunteering event filter
+            const volEventFilter = document.getElementById('volunteering-event-filter');
+            if (volEventFilter) {
+                volEventFilter.addEventListener('change', applyVolunteerFilters);
             }
             
             document.getElementById('hours-slider-s1')?.addEventListener('input', updateRemainingFamiliesCount);
