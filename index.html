@@ -575,7 +575,7 @@ function renderSignupsTab() {
                 const button = e.target.closest('button');
                 const sidebarLink = e.target.closest('.sidebar-link');
 
-                // --- Sidebar Navigation (Check this first!) ---
+               // --- Sidebar Navigation (Check this first!) ---
                 if (sidebarLink) {
                     e.preventDefault();
                     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
@@ -593,11 +593,11 @@ function renderSignupsTab() {
 
                 // --- Button Checks ---
                 if (!button) {
-                    // Close modal if clicking outside the content
-                    if(e.target.closest('.modal')) {
-                        closeModal(e.target.closest('.modal').id);
+                    // FIX: Close modal ONLY if clicking the modal backdrop itself
+                    if (e.target.classList.contains('modal')) {
+                        closeModal(e.target.id);
                     }
-                    return; // Not a button or sidebar link, exit
+                    return; // Not a button, sidebar link, or backdrop click, exit
                 }
 
                 // Create Event Button
