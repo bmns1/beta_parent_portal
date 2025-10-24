@@ -536,7 +536,7 @@ function renderSignupsTab() {
                     <td class="py-3 px-4 text-center">${data.progress.semester2.completed}</td>
                     <td class="py-3 px-4 text-center">${data.progress.semester2.inProgress}</td>
                     <td class="py-3 px-4 text-center text-red-600">${data.progress.semester2.penalty}</td>
-                    <td class="py-3 px-4 text-center font-semibold">${data.progress.semester2.totalRequired}</td>
+                    <td classG="py-3 px-4 text-center font-semibold">${data.progress.semester2.totalRequired}</td>
                 </tr>
             `).join('');
 
@@ -573,21 +573,9 @@ function renderSignupsTab() {
             // Main click listener for dynamic content
             document.body.addEventListener('click', e => {
                 const button = e.target.closest('button');
-                if (!button) {
-                    // Close modal if clicking outside the content
-                    if(e.target.closest('.modal')) {
-                        closeModal(e.target.closest('.modal').id);
-                    }
-                    return;
-                }
-
-                // Create Event Button
-                if (button.id === 'create-event-btn') {
-                    openModal('event-modal');
-                }
-
-                // Sidebar navigation
                 const sidebarLink = e.target.closest('.sidebar-link');
+
+                // --- Sidebar Navigation (Check this first!) ---
                 if (sidebarLink) {
                     e.preventDefault();
                     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
@@ -600,6 +588,21 @@ function renderSignupsTab() {
 
                     // Close mobile sidebar if open
                     document.getElementById('mobile-sidebar').classList.add('-translate-x-full');
+                    return; // Action handled, exit
+                }
+
+                // --- Button Checks ---
+                if (!button) {
+                    // Close modal if clicking outside the content
+                    if(e.target.closest('.modal')) {
+                        closeModal(e.target.closest('.modal').id);
+                    }
+                    return; // Not a button or sidebar link, exit
+                }
+
+                // Create Event Button
+                if (button.id === 'create-event-btn') {
+                    openModal('event-modal');
                 }
 
                 // Mobile menu toggles
@@ -754,3 +757,4 @@ function renderSignupsTab() {
 
 </body>
 </html>
+
