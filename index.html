@@ -177,7 +177,7 @@
         </div>
     </div>
 
-    <!-- Modal for Updating Status -->
+    <!-- NEW: Modal for Updating Status -->
     <div id="status-modal" class="modal">
         <div class="modal-content bg-white p-6 rounded-lg shadow-xl">
             <h2 class="text-xl font-semibold mb-4">Update Status</h2>
@@ -197,6 +197,7 @@
 
     <script>
         const ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyXR747DT2sH_K-rvtoKEObWo5OYUpgUhBMWG7zwm4B3uliAGLZ1Jq0bZ2onc_U-8g/exec';
+        // --- NEW: Add the Parent Web App URL ---
         const PARENT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
@@ -250,16 +251,16 @@
                 });
         }
         
-        // This function posts to the ADMIN app
+        // --- THIS FUNCTION IS REVERTED TO no-cors ---
         function postAdminData(payload, successMessage) {
             return new Promise((resolve, reject) => {
                 fetch(ADMIN_WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                    mode: 'no-cors', // Reverted as requested
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Reverted
                     body: JSON.stringify(payload)
                 })
-                .then(() => { 
+                .then(() => { // Reverted
                     alert(successMessage);
                     fetchAdminData(ID_TOKEN); // Refresh all data
                     resolve();
@@ -271,8 +272,9 @@
                 });
             });
         }
+        // --- END OF CHANGE ---
 
-        // This function posts to the PARENT app
+        // --- NEW: Function to post to the PARENT web app ---
         function postParentData(payload) {
              return new Promise((resolve, reject) => {
                 fetch(PARENT_WEB_APP_URL, { 
@@ -291,6 +293,7 @@
                 });
             });
         }
+        // --- END OF NEW FUNCTION ---
 
         function renderAllTabs() {
             renderDashboard();
@@ -607,19 +610,43 @@ function renderSignupsTab() {
         
         function renderFamilyProgressTab() {
             const container = document.getElementById('progress');
-            const tableRows = Object.entries(adminData.familyProgress).map(([familyId, data]) => `
+            const tableRows = Object.entries(adminData.familyProgress).map(([familyId, data]) => {
+                // Get student names for this family
+                const familyDetails = adminData.familyDetails[familyId] || { students: [] };
+                const studentNames = familyDetails.students.length > 0 ? familyDetails.students.join(', ') : 'N/A';
+
+                // Determine background color for Semester 1
+                let s1BgClass = '';
+                if (data.progress.semester1.completed >= data.progress.semester1.totalRequired) {
+                    s1BgClass = 'bg-green-100 text-green-800 font-semibold'; 
+                } else {
+                    s1BgClass = 'bg-orange-100 text-orange-800 font-semibold';
+                }
+
+                // Determine background color for Semester 2
+                let s2BgClass = '';
+                if (data.progress.semester2.completed >= data.progress.semester2.totalRequired) {
+                    s2BgClass = 'bg-green-100 text-green-800 font-semibold';
+                } else {
+                    s2BgClass = 'bg-orange-100 text-orange-800 font-semibold';
+                }
+
+                return `
                 <tr class="border-b border-slate-200 family-row hover:bg-slate-50" data-family-id="${familyId}">
-                    <td class="py-3 px-4 font-mono">${familyId}</td>
-                    <td class="py-3 px-4 text-center">${data.progress.semester1.completed}</td>
+                    <td class="py-3 px-4 font-mono">
+                        <div>${familyId}</div>
+                        <div class="text-xs text-slate-500 mt-1">${studentNames}</div>
+                    </td>
+                    <td class="py-3 px-4 text-center ${s1BgClass}">${data.progress.semester1.completed}</td>
                     <td class="py-3 px-4 text-center">${data.progress.semester1.inProgress}</td>
                     <td class="py-3 px-4 text-center text-red-600">${data.progress.semester1.penalty}</td>
                     <td class="py-3 px-4 text-center font-semibold">${data.progress.semester1.totalRequired}</td>
-                    <td class="py-3 px-4 text-center">${data.progress.semester2.completed}</td>
+                    <td class="py-3 px-4 text-center ${s2BgClass}">${data.progress.semester2.completed}</td>
                     <td class="py-3 px-4 text-center">${data.progress.semester2.inProgress}</td>
                     <td class="py-3 px-4 text-center text-red-600">${data.progress.semester2.penalty}</td>
-                    <td classG="py-3 px-4 text-center font-semibold">${data.progress.semester2.totalRequired}</td>
+                    <td class="py-3 px-4 text-center font-semibold">${data.progress.semester2.totalRequired}</td>
                 </tr>
-            `).join('');
+            `}).join('');
 
             container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
@@ -629,7 +656,7 @@ function renderSignupsTab() {
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left text-slate-700">
                         <thead class="bg-slate-50 text-xs text-slate-500 uppercase"><tr>
-                            <th rowspan="2" class="py-3 px-4 align-bottom">Family ID</th>
+                            <th rowspan="2" class="py-3 px-4 align-bottom">Family ID / Students</th>
                             <th colspan="4" class="py-3 px-4 text-center border-b border-l border-slate-200">Semester 1</th>
                             <th colspan="4" class="py-3 px-4 text-center border-b border-l border-slate-200">Semester 2</th>
                         </tr><tr>
@@ -914,4 +941,3 @@ function renderSignupsTab() {
 
 </body>
 </html>
-
