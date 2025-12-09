@@ -725,7 +725,10 @@ function renderSignupsTab() {
             contentHtml += `<div class="mb-6"><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Semester 1</h3>`;
             const s1Signups = familySignups.filter(s => {
                 const opp = volunteeringMap[s.opportunityid];
-                return opp && opp.semester == 1;
+                // Robust semester matching
+                if (!opp) return false;
+                const oppSemester = String(opp.semester).trim();
+                return oppSemester === '1';
             });
             
             if (s1Signups.length === 0) {
@@ -753,7 +756,10 @@ function renderSignupsTab() {
             contentHtml += `<div><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Semester 2</h3>`;
             const s2Signups = familySignups.filter(s => {
                 const opp = volunteeringMap[s.opportunityid];
-                return opp && opp.semester == 2;
+                // Robust semester matching
+                if (!opp) return false;
+                const oppSemester = String(opp.semester).trim();
+                return oppSemester === '2';
             });
             
             if (s2Signups.length === 0) {
