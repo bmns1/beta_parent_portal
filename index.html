@@ -711,9 +711,11 @@ function renderSignupsTab() {
             document.getElementById('fd-student-names').textContent = `Students: ${familyDetails.students.join(', ')}`;
             
             // Filter signups for this family
-            const familySignups = adminData.signups.filter(s => s.familyid === familyId);
+            // Ensure familyId from data is string for comparison
+            const familySignups = adminData.signups.filter(s => String(s.familyid) === String(familyId));
             
             // Map opportunity details for easier display
+            // Normalize keys by trimming whitespace
             const volunteeringMap = adminData.volunteering.reduce((map, opp) => {
                 if (opp.opportunityid) { map[String(opp.opportunityid).trim()] = opp; }
                 return map;
@@ -721,67 +723,70 @@ function renderSignupsTab() {
 
             let contentHtml = '';
 
-            // Semester 1
-            contentHtml += `<div class="mb-6"><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Semester 1</h3>`;
-            const s1Signups = familySignups.filter(s => {
-                const opp = volunteeringMap[s.opportunityid];
-                // Robust semester matching
-                if (!opp) return false;
-                const oppSemester = String(opp.semester).trim();
-                return oppSemester === '1';
-            });
-            
-            if (s1Signups.length === 0) {
-                 contentHtml += `<p class="text-sm text-slate-500 italic">No activity recorded for Semester 1.</p>`;
-            } else {
-                 contentHtml += `<div class="space-y-3">`;
-                 s1Signups.forEach(s => {
-                    const opp = volunteeringMap[s.opportunityid] || {};
+            // Helper function to render signup list
+            const renderSignupList = (signups) => {
+                 if (signups.length === 0) {
+                     return `<p class="text-sm text-slate-500 italic">No activity recorded.</p>`;
+                 }
+                 return `<div class="space-y-3">` + signups.map(s => {
+                    // Try to find opportunity details, handle missing data gracefully
+                    const oppId = String(s.opportunityid).trim();
+                    const opp = volunteeringMap[oppId] || {};
                     const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
-                    contentHtml += `
+                    
+                    // Use fallback values if opportunity details are missing
+                    const title = opp.title || `Opportunity ID: ${oppId}`;
+                    const dateStr = opp.date ? new Date(opp.date).toLocaleDateString() : (s.signupdate ? new Date(s.signupdate).toLocaleDateString() : 'N/A');
+                    const hours = opp.hours !== undefined ? opp.hours : '?';
+
+                    return `
                         <div class="flex justify-between items-start border-b border-slate-100 pb-2 last:border-0">
                             <div>
-                                <p class="font-semibold text-sm text-slate-800">${opp.title || 'Unknown Activity'}</p>
-                                <p class="text-xs text-slate-500">${new Date(opp.date).toLocaleDateString()} | ${opp.hours || 0} Hours</p>
+                                <p class="font-semibold text-sm text-slate-800">${title}</p>
+                                <p class="text-xs text-slate-500">${dateStr} | ${hours} Hours</p>
                             </div>
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span>
                         </div>
                     `;
-                 });
-                 contentHtml += `</div>`;
-            }
+                 }).join('') + `</div>`;
+            };
+
+            // Semester 1
+            contentHtml += `<div class="mb-6"><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Semester 1</h3>`;
+            const s1Signups = familySignups.filter(s => {
+                const oppId = String(s.opportunityid).trim();
+                const opp = volunteeringMap[oppId];
+                // If we found the opp details, check semester. If not found, include it here as a fallback? 
+                // Or maybe create an "Uncategorized" section? 
+                // For now, let's include unknowns in S1 to ensure they are seen, or rely on Strict matching?
+                // Let's stick to strict matching for semester buckets to be accurate.
+                return opp && String(opp.semester).trim() === '1';
+            });
+            contentHtml += renderSignupList(s1Signups);
             contentHtml += `</div>`; // End S1
 
              // Semester 2
             contentHtml += `<div><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Semester 2</h3>`;
             const s2Signups = familySignups.filter(s => {
-                const opp = volunteeringMap[s.opportunityid];
-                // Robust semester matching
-                if (!opp) return false;
-                const oppSemester = String(opp.semester).trim();
-                return oppSemester === '2';
+                const oppId = String(s.opportunityid).trim();
+                const opp = volunteeringMap[oppId];
+                return opp && String(opp.semester).trim() === '2';
             });
-            
-            if (s2Signups.length === 0) {
-                 contentHtml += `<p class="text-sm text-slate-500 italic">No activity recorded for Semester 2.</p>`;
-            } else {
-                 contentHtml += `<div class="space-y-3">`;
-                 s2Signups.forEach(s => {
-                    const opp = volunteeringMap[s.opportunityid] || {};
-                    const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
-                    contentHtml += `
-                        <div class="flex justify-between items-start border-b border-slate-100 pb-2 last:border-0">
-                            <div>
-                                <p class="font-semibold text-sm text-slate-800">${opp.title || 'Unknown Activity'}</p>
-                                <p class="text-xs text-slate-500">${new Date(opp.date).toLocaleDateString()} | ${opp.hours || 0} Hours</p>
-                            </div>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span>
-                        </div>
-                    `;
-                 });
-                 contentHtml += `</div>`;
-            }
+            contentHtml += renderSignupList(s2Signups);
             contentHtml += `</div>`; // End S2
+            
+            // "Other" / Unmatched Signups Section
+            // This catches signups where the Opportunity ID doesn't match the current Volunteer list (e.g. deleted opps)
+            const otherSignups = familySignups.filter(s => {
+                 const oppId = String(s.opportunityid).trim();
+                 return !volunteeringMap[oppId];
+            });
+
+            if (otherSignups.length > 0) {
+                contentHtml += `<div class="mt-6"><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Other / Unmatched Activities</h3>`;
+                contentHtml += renderSignupList(otherSignups);
+                contentHtml += `</div>`;
+            }
 
             document.getElementById('fd-content').innerHTML = contentHtml;
             openModal('family-details-modal');
