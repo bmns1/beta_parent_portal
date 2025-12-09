@@ -36,11 +36,13 @@
         .modal-content {
             margin: 10% auto;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px; /* Increased width for details */
         }
         .modal.flex { display: flex; }
         .tab-content { display: none; }
         .tab-content-active { display: block; }
+        /* Clickable row style */
+        .family-row { cursor: pointer; }
     </style>
 </head>
 <body class="antialiased">
@@ -177,7 +179,7 @@
         </div>
     </div>
 
-    <!-- NEW: Modal for Updating Status -->
+    <!-- Modal for Updating Status -->
     <div id="status-modal" class="modal">
         <div class="modal-content bg-white p-6 rounded-lg shadow-xl">
             <h2 class="text-xl font-semibold mb-4">Update Status</h2>
@@ -190,6 +192,29 @@
             </div>
             <div class="mt-6 text-right">
                 <button type="button" onclick="closeModal('status-modal')" class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: Modal for Family Details -->
+    <div id="family-details-modal" class="modal">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900" id="fd-family-id">Family Details</h2>
+                    <p class="text-slate-500 text-sm mt-1" id="fd-student-names">Students: --</p>
+                </div>
+                <button onclick="closeModal('family-details-modal')" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="ph-x text-2xl"></i>
+                </button>
+            </div>
+            
+            <div id="fd-content" class="space-y-6 overflow-y-auto max-h-[70vh] pr-2">
+                <!-- Content injected here -->
+            </div>
+            
+            <div class="mt-6 text-right pt-4 border-t border-slate-100">
+                <button type="button" onclick="closeModal('family-details-modal')" class="bg-slate-200 text-slate-800 font-semibold py-2 px-6 rounded-lg hover:bg-slate-300 transition">Close</button>
             </div>
         </div>
     </div>
@@ -674,6 +699,88 @@ function renderSignupsTab() {
             const mobileNav = document.getElementById('mobile-sidebar-nav');
             mobileNav.innerHTML = desktopNav.innerHTML;
         }
+        
+        // --- NEW: Function to show family details in modal ---
+        function showFamilyDetails(familyId) {
+            const familyDetails = adminData.familyDetails[familyId];
+            const familyProgress = adminData.familyProgress[familyId];
+            
+            if (!familyDetails) return;
+
+            document.getElementById('fd-family-id').textContent = `Family: ${familyId}`;
+            document.getElementById('fd-student-names').textContent = `Students: ${familyDetails.students.join(', ')}`;
+            
+            // Filter signups for this family
+            const familySignups = adminData.signups.filter(s => s.familyid === familyId);
+            
+            // Map opportunity details for easier display
+            const volunteeringMap = adminData.volunteering.reduce((map, opp) => {
+                if (opp.opportunityid) { map[String(opp.opportunityid).trim()] = opp; }
+                return map;
+            }, {});
+
+            let contentHtml = '';
+
+            // Semester 1
+            contentHtml += `<div class="mb-6"><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Semester 1</h3>`;
+            const s1Signups = familySignups.filter(s => {
+                const opp = volunteeringMap[s.opportunityid];
+                return opp && opp.semester == 1;
+            });
+            
+            if (s1Signups.length === 0) {
+                 contentHtml += `<p class="text-sm text-slate-500 italic">No activity recorded for Semester 1.</p>`;
+            } else {
+                 contentHtml += `<div class="space-y-3">`;
+                 s1Signups.forEach(s => {
+                    const opp = volunteeringMap[s.opportunityid] || {};
+                    const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
+                    contentHtml += `
+                        <div class="flex justify-between items-start border-b border-slate-100 pb-2 last:border-0">
+                            <div>
+                                <p class="font-semibold text-sm text-slate-800">${opp.title || 'Unknown Activity'}</p>
+                                <p class="text-xs text-slate-500">${new Date(opp.date).toLocaleDateString()} | ${opp.hours || 0} Hours</p>
+                            </div>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span>
+                        </div>
+                    `;
+                 });
+                 contentHtml += `</div>`;
+            }
+            contentHtml += `</div>`; // End S1
+
+             // Semester 2
+            contentHtml += `<div><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Semester 2</h3>`;
+            const s2Signups = familySignups.filter(s => {
+                const opp = volunteeringMap[s.opportunityid];
+                return opp && opp.semester == 2;
+            });
+            
+            if (s2Signups.length === 0) {
+                 contentHtml += `<p class="text-sm text-slate-500 italic">No activity recorded for Semester 2.</p>`;
+            } else {
+                 contentHtml += `<div class="space-y-3">`;
+                 s2Signups.forEach(s => {
+                    const opp = volunteeringMap[s.opportunityid] || {};
+                    const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
+                    contentHtml += `
+                        <div class="flex justify-between items-start border-b border-slate-100 pb-2 last:border-0">
+                            <div>
+                                <p class="font-semibold text-sm text-slate-800">${opp.title || 'Unknown Activity'}</p>
+                                <p class="text-xs text-slate-500">${new Date(opp.date).toLocaleDateString()} | ${opp.hours || 0} Hours</p>
+                            </div>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span>
+                        </div>
+                    `;
+                 });
+                 contentHtml += `</div>`;
+            }
+            contentHtml += `</div>`; // End S2
+
+            document.getElementById('fd-content').innerHTML = contentHtml;
+            openModal('family-details-modal');
+        }
+
 
         // --- This function is now updated ---
         function updateSignupStatus(signupId, newStatus) {
@@ -694,7 +801,8 @@ function renderSignupsTab() {
             document.body.addEventListener('click', e => {
                 const button = e.target.closest('button');
                 const sidebarLink = e.target.closest('.sidebar-link');
-                
+                const familyRow = e.target.closest('.family-row'); // Check for family row click
+
                 // --- Card expand/collapse (Check this first!) ---
                 const header = e.target.closest('.event-card-header');
                 if (header) {
@@ -706,6 +814,13 @@ function renderSignupsTab() {
                         icon.classList.toggle('rotate-180');
                     }
                     return; // Action handled, exit
+                }
+                
+                // --- Family Row Click (NEW) ---
+                if (familyRow) {
+                    const familyId = familyRow.dataset.familyId;
+                    showFamilyDetails(familyId);
+                    return;
                 }
 
                 // --- Sidebar Navigation ---
@@ -738,6 +853,7 @@ function renderSignupsTab() {
                     const signupId = button.dataset.signupId;
                     document.getElementById('status-modal-signupid').value = signupId;
                     openModal('status-modal');
+                    e.stopPropagation(); // Prevent bubbling up to any potential parent listeners
                 }
 
                 // --- Handle clicks on the new modal buttons ---
