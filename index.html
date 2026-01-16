@@ -303,15 +303,16 @@
 
         function renderDashboard() {
             const container = document.getElementById('dashboard');
-            const s1Completed = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester1.completed, 0);
-            const s1InProgress = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester1.inProgress, 0);
-            const s1Vacant = adminData.volunteering.filter(o => o.semester == 1).reduce((sum, opp) => sum + ((parseFloat(opp.neededvolunteers) || 0) - (parseFloat(opp.signedupvolunteers) || 0)) * (parseFloat(opp['number of hours']) || 0), 0);
-            const s1TotalRequired = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester1.baseRequired, 0);
+            // FIX: Use parseFloat instead of parseInt for hours calculation
+            const s1Completed = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester1.completed), 0).toFixed(1);
+            const s1InProgress = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester1.inProgress), 0).toFixed(1);
+            const s1Vacant = adminData.volunteering.filter(o => o.semester == 1).reduce((sum, opp) => sum + ((parseFloat(opp.neededvolunteers) || 0) - (parseFloat(opp.signedupvolunteers) || 0)) * (parseFloat(opp['number of hours']) || 0), 0).toFixed(1);
+            const s1TotalRequired = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester1.baseRequired), 0).toFixed(1);
             
-            const s2Completed = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester2.completed, 0);
-            const s2InProgress = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester2.inProgress, 0);
-            const s2Vacant = adminData.volunteering.filter(o => o.semester == 2).reduce((sum, opp) => sum + ((parseFloat(opp.neededvolunteers) || 0) - (parseFloat(opp.signedupvolunteers) || 0)) * (parseFloat(opp['number of hours']) || 0), 0);
-            const s2TotalRequired = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester2.baseRequired, 0);
+            const s2Completed = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester2.completed), 0).toFixed(1);
+            const s2InProgress = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester2.inProgress), 0).toFixed(1);
+            const s2Vacant = adminData.volunteering.filter(o => o.semester == 2).reduce((sum, opp) => sum + ((parseFloat(opp.neededvolunteers) || 0) - (parseFloat(opp.signedupvolunteers) || 0)) * (parseFloat(opp['number of hours']) || 0), 0).toFixed(1);
+            const s2TotalRequired = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester2.baseRequired), 0).toFixed(1);
 
             container.innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -380,12 +381,12 @@
 
             if (!slider1 || !slider2) return;
 
-            const hours1 = parseInt(slider1.value);
+            const hours1 = parseFloat(slider1.value);
             value1.textContent = hours1;
             const countS1 = Object.values(adminData.familyProgress).filter(f => (f.progress.semester1.totalRequired - f.progress.semester1.completed) > hours1).length;
             count1.textContent = countS1;
 
-            const hours2 = parseInt(slider2.value);
+            const hours2 = parseFloat(slider2.value);
             value2.textContent = hours2;
             const countS2 = Object.values(adminData.familyProgress).filter(f => (f.progress.semester2.totalRequired - f.progress.semester2.completed) > hours2).length;
             count2.textContent = countS2;
@@ -667,14 +668,14 @@
                 }
 
                 if (filter === 'incomplete-s1') {
-                    if (data.progress.semester1.completed >= data.progress.semester1.totalRequired) return '';
+                    if (parseFloat(data.progress.semester1.completed) >= parseFloat(data.progress.semester1.totalRequired)) return '';
                 } else if (filter === 'incomplete-s2') {
-                    if (data.progress.semester2.completed >= data.progress.semester2.totalRequired) return '';
+                    if (parseFloat(data.progress.semester2.completed) >= parseFloat(data.progress.semester2.totalRequired)) return '';
                 }
 
                 // Determine background color
-                const s1BgClass = (data.progress.semester1.completed >= data.progress.semester1.totalRequired) ? 'bg-green-100 text-green-800 font-semibold' : 'bg-orange-100 text-orange-800 font-semibold';
-                const s2BgClass = (data.progress.semester2.completed >= data.progress.semester2.totalRequired) ? 'bg-green-100 text-green-800 font-semibold' : 'bg-orange-100 text-orange-800 font-semibold';
+                const s1BgClass = (parseFloat(data.progress.semester1.completed) >= parseFloat(data.progress.semester1.totalRequired)) ? 'bg-green-100 text-green-800 font-semibold' : 'bg-orange-100 text-orange-800 font-semibold';
+                const s2BgClass = (parseFloat(data.progress.semester2.completed) >= parseFloat(data.progress.semester2.totalRequired)) ? 'bg-green-100 text-green-800 font-semibold' : 'bg-orange-100 text-orange-800 font-semibold';
 
                 return `
                 <tr class="border-b border-slate-200 family-row hover:bg-slate-50" data-family-id="${familyId}">
@@ -682,14 +683,14 @@
                         <div>${familyId}</div>
                         <div class="text-xs text-slate-500 mt-1">${studentNames}</div>
                     </td>
-                    <td class="py-3 px-4 text-center ${s1BgClass}">${data.progress.semester1.completed}</td>
-                    <td class="py-3 px-4 text-center">${data.progress.semester1.inProgress}</td>
-                    <td class="py-3 px-4 text-center text-red-600">${data.progress.semester1.penalty}</td>
-                    <td class="py-3 px-4 text-center font-semibold">${data.progress.semester1.totalRequired}</td>
-                    <td class="py-3 px-4 text-center ${s2BgClass}">${data.progress.semester2.completed}</td>
-                    <td class="py-3 px-4 text-center">${data.progress.semester2.inProgress}</td>
-                    <td class="py-3 px-4 text-center text-red-600">${data.progress.semester2.penalty}</td>
-                    <td class="py-3 px-4 text-center font-semibold">${data.progress.semester2.totalRequired}</td>
+                    <td class="py-3 px-4 text-center ${s1BgClass}">${parseFloat(data.progress.semester1.completed).toFixed(1)}</td>
+                    <td class="py-3 px-4 text-center">${parseFloat(data.progress.semester1.inProgress).toFixed(1)}</td>
+                    <td class="py-3 px-4 text-center text-red-600">${parseFloat(data.progress.semester1.penalty).toFixed(1)}</td>
+                    <td class="py-3 px-4 text-center font-semibold">${parseFloat(data.progress.semester1.totalRequired).toFixed(1)}</td>
+                    <td class="py-3 px-4 text-center ${s2BgClass}">${parseFloat(data.progress.semester2.completed).toFixed(1)}</td>
+                    <td class="py-3 px-4 text-center">${parseFloat(data.progress.semester2.inProgress).toFixed(1)}</td>
+                    <td class="py-3 px-4 text-center text-red-600">${parseFloat(data.progress.semester2.penalty).toFixed(1)}</td>
+                    <td class="py-3 px-4 text-center font-semibold">${parseFloat(data.progress.semester2.totalRequired).toFixed(1)}</td>
                 </tr>`;
             }).join('');
 
@@ -707,20 +708,20 @@
                 const studentNames = `"${familyDetails.students.join(', ')}"`; // Quote names for CSV safety
 
                 // Re-apply same filter logic
-                if (filter === 'incomplete-s1' && data.progress.semester1.completed >= data.progress.semester1.totalRequired) return;
-                if (filter === 'incomplete-s2' && data.progress.semester2.completed >= data.progress.semester2.totalRequired) return;
+                if (filter === 'incomplete-s1' && parseFloat(data.progress.semester1.completed) >= parseFloat(data.progress.semester1.totalRequired)) return;
+                if (filter === 'incomplete-s2' && parseFloat(data.progress.semester2.completed) >= parseFloat(data.progress.semester2.totalRequired)) return;
 
                 const row = [
                     familyId,
                     studentNames,
-                    data.progress.semester1.completed,
-                    data.progress.semester1.inProgress,
-                    data.progress.semester1.penalty,
-                    data.progress.semester1.totalRequired,
-                    data.progress.semester2.completed,
-                    data.progress.semester2.inProgress,
-                    data.progress.semester2.penalty,
-                    data.progress.semester2.totalRequired
+                    parseFloat(data.progress.semester1.completed).toFixed(1),
+                    parseFloat(data.progress.semester1.inProgress).toFixed(1),
+                    parseFloat(data.progress.semester1.penalty).toFixed(1),
+                    parseFloat(data.progress.semester1.totalRequired).toFixed(1),
+                    parseFloat(data.progress.semester2.completed).toFixed(1),
+                    parseFloat(data.progress.semester2.inProgress).toFixed(1),
+                    parseFloat(data.progress.semester2.penalty).toFixed(1),
+                    parseFloat(data.progress.semester2.totalRequired).toFixed(1)
                 ].join(",");
                 csvContent += row + "\n";
             });
@@ -762,7 +763,8 @@
                     const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
                     const title = opp.title || `Opportunity ID: ${oppId}`;
                     const dateStr = opp.date ? new Date(opp.date).toLocaleDateString() : (s.signupdate ? new Date(s.signupdate).toLocaleDateString() : 'N/A');
-                    const hours = opp.hours !== undefined ? opp.hours : '?';
+                    // FIX: Use parseFloat and handle "undefined"
+                    const hours = opp.hours !== undefined ? parseFloat(opp.hours) : '?';
                     return `<div class="flex justify-between items-start border-b border-slate-100 pb-2 last:border-0"><div><p class="font-semibold text-sm text-slate-800">${title}</p><p class="text-xs text-slate-500">${dateStr} | ${hours} Hours</p></div><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span></div>`;
                  }).join('') + `</div>`;
             };
