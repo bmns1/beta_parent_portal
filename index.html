@@ -14,13 +14,11 @@
             font-family: 'Inter', sans-serif;
             background-color: #f1f5f9; /* slate-100 */
         }
-        /* A more subtle active state for the light sidebar */
         .sidebar-link.active {
             background-color: #f0fdfa; /* teal-50 */
             color: #0d9488; /* teal-600 */
             font-weight: 600;
         }
-        /* Modal styles */
         .modal {
             display: none;
             position: fixed;
@@ -36,13 +34,20 @@
         .modal-content {
             margin: 10% auto;
             width: 90%;
-            max-width: 600px; /* Increased width for details */
+            max-width: 600px;
         }
         .modal.flex { display: flex; }
         .tab-content { display: none; }
         .tab-content-active { display: block; }
-        /* Clickable row style */
         .family-row { cursor: pointer; }
+        
+        /* Print Styles */
+        @media print {
+            body * { visibility: hidden; }
+            #printable-area, #printable-area * { visibility: visible; }
+            #printable-area { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -65,7 +70,7 @@
         </div>
     </div>
 
-    <!-- Main Admin Portal (Initially Hidden) -->
+    <!-- Main Admin Portal -->
     <div id="portal-container" class="hidden">
         <div class="flex h-screen bg-slate-100">
             <!-- Sidebar -->
@@ -146,7 +151,8 @@
         </div>
     </div>
     
-    <!-- Modal for Create Event -->
+    <!-- Modals -->
+    <!-- Create Event -->
     <div id="event-modal" class="modal">
         <div class="modal-content bg-white p-6 rounded-lg shadow-xl">
             <h2 class="text-xl font-semibold mb-4">Create New Event</h2>
@@ -179,7 +185,7 @@
         </div>
     </div>
 
-    <!-- Modal for Updating Status -->
+    <!-- Update Status -->
     <div id="status-modal" class="modal">
         <div class="modal-content bg-white p-6 rounded-lg shadow-xl">
             <h2 class="text-xl font-semibold mb-4">Update Status</h2>
@@ -196,7 +202,7 @@
         </div>
     </div>
 
-    <!-- NEW: Modal for Family Details -->
+    <!-- Family Details -->
     <div id="family-details-modal" class="modal">
         <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl">
             <div class="flex justify-between items-start mb-4">
@@ -208,11 +214,7 @@
                     <i class="ph-x text-2xl"></i>
                 </button>
             </div>
-            
-            <div id="fd-content" class="space-y-6 overflow-y-auto max-h-[70vh] pr-2">
-                <!-- Content injected here -->
-            </div>
-            
+            <div id="fd-content" class="space-y-6 overflow-y-auto max-h-[70vh] pr-2"></div>
             <div class="mt-6 text-right pt-4 border-t border-slate-100">
                 <button type="button" onclick="closeModal('family-details-modal')" class="bg-slate-200 text-slate-800 font-semibold py-2 px-6 rounded-lg hover:bg-slate-300 transition">Close</button>
             </div>
@@ -222,7 +224,6 @@
 
     <script>
         const ADMIN_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyXR747DT2sH_K-rvtoKEObWo5OYUpgUhBMWG7zwm4B3uliAGLZ1Jq0bZ2onc_U-8g/exec';
-        // --- NEW: Add the Parent Web App URL ---
         const PARENT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
@@ -247,13 +248,8 @@
             window.location.reload();
         }
         
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('flex');
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('flex');
-        }
+        function openModal(modalId) { document.getElementById(modalId).classList.add('flex'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('flex'); }
 
         // --- DATA FETCH & RENDER ---
         function fetchAdminData(token) {
@@ -276,49 +272,23 @@
                 });
         }
         
-        // --- THIS FUNCTION IS REVERTED TO no-cors ---
         function postAdminData(payload, successMessage) {
             return new Promise((resolve, reject) => {
                 fetch(ADMIN_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // Reverted as requested
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Reverted
-                    body: JSON.stringify(payload)
-                })
-                .then(() => { // Reverted
-                    alert(successMessage);
-                    fetchAdminData(ID_TOKEN); // Refresh all data
-                    resolve();
-                })
-                .catch(error => {
-                    console.error('POST Error:', error);
-                    alert(`An error occurred: ${error.message}`);
-                    reject(error);
-                });
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload)
+                }).then(() => { 
+                    alert(successMessage); fetchAdminData(ID_TOKEN); resolve();
+                }).catch(error => { console.error('POST Error:', error); alert(`An error occurred: ${error.message}`); reject(error); });
             });
         }
-        // --- END OF CHANGE ---
 
-        // --- NEW: Function to post to the PARENT web app ---
         function postParentData(payload) {
              return new Promise((resolve, reject) => {
                 fetch(PARENT_WEB_APP_URL, { 
-                    method: 'POST',
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
-                })
-                .then(() => {
-                    // Don't alert or refresh here. Let the calling function do it.
-                    resolve(); 
-                })
-                .catch(error => {
-                    console.error('Parent App POST Error:', error);
-                    reject(error); // Reject the promise so the UI can show an error
-                });
+                    method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload)
+                }).then(() => { resolve(); }).catch(error => { console.error('Parent App POST Error:', error); reject(error); });
             });
         }
-        // --- END OF NEW FUNCTION ---
 
         function renderAllTabs() {
             renderDashboard();
@@ -333,7 +303,6 @@
 
         function renderDashboard() {
             const container = document.getElementById('dashboard');
-            
             const s1Completed = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester1.completed, 0);
             const s1InProgress = Object.values(adminData.familyProgress).reduce((sum, family) => sum + family.progress.semester1.inProgress, 0);
             const s1Vacant = adminData.volunteering.filter(o => o.semester == 1).reduce((sum, opp) => sum + ((parseInt(opp.neededvolunteers) || 0) - (parseInt(opp.signedupvolunteers) || 0)) * (parseInt(opp['number of hours']) || 0), 0);
@@ -472,22 +441,16 @@
                 <div id="volunteering-cards-list" class="space-y-4"></div>
             </div>`;
             
-            applyVolunteerFilters(); // Render the initial sorted/filtered list
+            applyVolunteerFilters(); 
         }
         
         function applyVolunteerFilters() {
             const filterValue = document.getElementById('volunteering-event-filter').value;
-            
             let opportunities = [...adminData.volunteering];
-            
-            // 1. Sort by date (ascending)
             opportunities.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-            // 2. Filter by event
             if (filterValue !== 'all') {
                 opportunities = opportunities.filter(opp => opp.eventid === filterValue);
             }
-
             renderVolunteerCards(opportunities);
         }
 
@@ -497,7 +460,6 @@
                 container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center text-slate-500">No volunteering opportunities found for this event.</div>`;
                 return;
             }
-            
             container.innerHTML = opportunities.map(opp => `
                 <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div class="mb-4 sm:mb-0">
@@ -521,62 +483,62 @@
             `).join('');
         }
         
-function renderSignupsTab() {
-    const container = document.getElementById('signups-admin');
-    if (!adminData.events || !adminData.signups || !adminData.familyDetails || !adminData.volunteering) {
-        container.innerHTML = '<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><p>No signup data available to display.</p></div>';
-        return;
-    }
-    const oppToEventMap = adminData.volunteering.reduce((map, opp) => {
-        if (opp.opportunityid) { map[String(opp.opportunityid).trim()] = String(opp.eventid).trim(); }
-        return map;
-    }, {});
-    const signupsByEvent = adminData.signups.reduce((acc, signup) => {
-        const oppId = String(signup.opportunityid).trim();
-        const eventId = oppToEventMap[oppId] || 'general';
-        if (!acc[eventId]) acc[eventId] = [];
-        acc[eventId].push(signup);
-        return acc;
-    }, {});
-    const eventNameMap = adminData.events.reduce((map, event) => {
-        map[String(event.eventid).trim()] = event.eventname;
-        return map;
-    }, {});
-    const volunteeringMap = adminData.volunteering.reduce((map, opp) => {
-        if (opp.opportunityid) { map[String(opp.opportunityid).trim()] = opp; }
-        return map;
-    }, {});
-    const eventCardsHtml = Object.keys(signupsByEvent).map((eventId, index) => {
-        const eventSignups = signupsByEvent[eventId];
-        const eventName = eventNameMap[eventId] || 'General Opportunities';
-        const opportunitiesInEvent = eventSignups.reduce((acc, signup) => {
-            const oppId = String(signup.opportunityid).trim();
-            if (oppId) { if (!acc[oppId]) acc[oppId] = []; acc[oppId].push(signup); }
-            return acc;
-        }, {});
-        const opportunityCardsHtml = Object.entries(opportunitiesInEvent).map(([oppId, signups]) => {
-            const oppDetails = volunteeringMap[oppId] || {};
-            const familyListHtml = signups.map(s => {
-                const familyDetails = adminData.familyDetails[s.familyid] || { students: ['N/A'] };
-                const studentNames = familyDetails.students.join(', ');
-                const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
-                
-                return `<div class="border-t border-slate-100 mt-2 pt-2"><div class="flex justify-between items-center"><div><p class="font-semibold text-sm text-slate-800">${s.parentemail}</p><p class="text-xs text-slate-500">Family ID: ${s.familyid} | Students: ${studentNames}</p></div>
-                    <button 
-                        class="status-btn inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor} cursor-pointer hover:opacity-80 transition-opacity"
-                        data-signup-id="${s.signupid}"
-                        data-current-status="${s.status}">
-                        ${s.status}
-                    </button>
-                </div></div>`;
-                
+        function renderSignupsTab() {
+            const container = document.getElementById('signups-admin');
+            if (!adminData.events || !adminData.signups || !adminData.familyDetails || !adminData.volunteering) {
+                container.innerHTML = '<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><p>No signup data available to display.</p></div>';
+                return;
+            }
+            const oppToEventMap = adminData.volunteering.reduce((map, opp) => {
+                if (opp.opportunityid) { map[String(opp.opportunityid).trim()] = String(opp.eventid).trim(); }
+                return map;
+            }, {});
+            const signupsByEvent = adminData.signups.reduce((acc, signup) => {
+                const oppId = String(signup.opportunityid).trim();
+                const eventId = oppToEventMap[oppId] || 'general';
+                if (!acc[eventId]) acc[eventId] = [];
+                acc[eventId].push(signup);
+                return acc;
+            }, {});
+            const eventNameMap = adminData.events.reduce((map, event) => {
+                map[String(event.eventid).trim()] = event.eventname;
+                return map;
+            }, {});
+            const volunteeringMap = adminData.volunteering.reduce((map, opp) => {
+                if (opp.opportunityid) { map[String(opp.opportunityid).trim()] = opp; }
+                return map;
+            }, {});
+            const eventCardsHtml = Object.keys(signupsByEvent).map((eventId, index) => {
+                const eventSignups = signupsByEvent[eventId];
+                const eventName = eventNameMap[eventId] || 'General Opportunities';
+                const opportunitiesInEvent = eventSignups.reduce((acc, signup) => {
+                    const oppId = String(signup.opportunityid).trim();
+                    if (oppId) { if (!acc[oppId]) acc[oppId] = []; acc[oppId].push(signup); }
+                    return acc;
+                }, {});
+                const opportunityCardsHtml = Object.entries(opportunitiesInEvent).map(([oppId, signups]) => {
+                    const oppDetails = volunteeringMap[oppId] || {};
+                    const familyListHtml = signups.map(s => {
+                        const familyDetails = adminData.familyDetails[s.familyid] || { students: ['N/A'] };
+                        const studentNames = familyDetails.students.join(', ');
+                        const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
+                        
+                        return `<div class="border-t border-slate-100 mt-2 pt-2"><div class="flex justify-between items-center"><div><p class="font-semibold text-sm text-slate-800">${s.parentemail}</p><p class="text-xs text-slate-500">Family ID: ${s.familyid} | Students: ${studentNames}</p></div>
+                            <button 
+                                class="status-btn inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor} cursor-pointer hover:opacity-80 transition-opacity"
+                                data-signup-id="${s.signupid}"
+                                data-current-status="${s.status}">
+                                ${s.status}
+                            </button>
+                        </div></div>`;
+                        
+                    }).join('');
+                    return `<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200"><h5 class="font-bold text-slate-800">${oppDetails.title || 'Unknown Task'} (${oppDetails.time || 'N/A'})</h5><p class="text-sm text-slate-500 mt-1">${oppDetails.description || ''}</p><div class="mt-2"><h6 class="text-xs font-semibold text-slate-600 uppercase">Signed-up Families:</h6><div class="space-y-2">${familyListHtml}</div></div></div>`;
+                }).join('');
+                return `<div class="bg-slate-50 rounded-lg shadow-sm border border-slate-200 overflow-hidden"><div class="p-4 border-b border-slate-200 cursor-pointer flex justify-between items-center event-card-header" data-target="opportunity-group-${index}"><h3 class="text-xl font-bold text-slate-900">${eventName}</h3><i class="ph-caret-down text-2xl transition-transform"></i></div><div id="opportunity-group-${index}" class="hidden p-4 space-y-4 bg-slate-50">${opportunityCardsHtml}</div></div>`;
             }).join('');
-            return `<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200"><h5 class="font-bold text-slate-800">${oppDetails.title || 'Unknown Task'} (${oppDetails.time || 'N/A'})</h5><p class="text-sm text-slate-500 mt-1">${oppDetails.description || ''}</p><div class="mt-2"><h6 class="text-xs font-semibold text-slate-600 uppercase">Signed-up Families:</h6><div class="space-y-2">${familyListHtml}</div></div></div>`;
-        }).join('');
-        return `<div class="bg-slate-50 rounded-lg shadow-sm border border-slate-200 overflow-hidden"><div class="p-4 border-b border-slate-200 cursor-pointer flex justify-between items-center event-card-header" data-target="opportunity-group-${index}"><h3 class="text-xl font-bold text-slate-900">${eventName}</h3><i class="ph-caret-down text-2xl transition-transform"></i></div><div id="opportunity-group-${index}" class="hidden p-4 space-y-4 bg-slate-50">${opportunityCardsHtml}</div></div>`;
-    }).join('');
-    container.innerHTML = `<div class="space-y-4">${eventCardsHtml || '<p>No families have signed up for any events yet.</p>'}</div>`;
-}
+            container.innerHTML = `<div class="space-y-4">${eventCardsHtml || '<p>No families have signed up for any events yet.</p>'}</div>`;
+        }
 
         function renderEventStatusTab() {
             const container = document.getElementById('event-status');
@@ -635,26 +597,84 @@ function renderSignupsTab() {
         
         function renderFamilyProgressTab() {
             const container = document.getElementById('progress');
-            const tableRows = Object.entries(adminData.familyProgress).map(([familyId, data]) => {
-                // Get student names for this family
+            
+            // Layout with filters and buttons
+            container.innerHTML = `
+            <div id="printable-area" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 no-print">
+                    <h2 class="text-2xl font-semibold text-slate-900">Family Progress</h2>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <select id="progress-filter" class="rounded-md border-slate-300 shadow-sm text-sm focus:border-teal-500 focus:ring-teal-500">
+                            <option value="all">All Families</option>
+                            <option value="incomplete-s1">Incomplete Semester 1</option>
+                            <option value="incomplete-s2">Incomplete Semester 2</option>
+                        </select>
+                        <input type="text" id="family-search" placeholder="Search Family ID..." class="rounded-md border-slate-300 shadow-sm text-sm">
+                        <button id="download-csv-btn" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 flex items-center justify-center">
+                            <i class="ph-download-simple mr-2"></i> CSV
+                        </button>
+                        <button id="print-progress-btn" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-teal-700 flex items-center justify-center">
+                            <i class="ph-printer mr-2"></i> Print
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-slate-700">
+                        <thead class="bg-slate-50 text-xs text-slate-500 uppercase">
+                            <tr>
+                                <th rowspan="2" class="py-3 px-4 align-bottom">Family ID / Students</th>
+                                <th colspan="4" class="py-3 px-4 text-center border-b border-l border-slate-200">Semester 1</th>
+                                <th colspan="4" class="py-3 px-4 text-center border-b border-l border-slate-200">Semester 2</th>
+                            </tr>
+                            <tr>
+                                <th class="py-2 px-4 text-center font-normal border-l border-slate-200">Completed</th>
+                                <th class="py-2 px-4 text-center font-normal">In Progress</th>
+                                <th class="py-2 px-4 text-center font-normal">Penalty</th>
+                                <th class="py-2 px-4 text-center font-normal">Total Req.</th>
+                                <th class="py-2 px-4 text-center font-normal border-l border-slate-200">Completed</th>
+                                <th class="py-2 px-4 text-center font-normal">In Progress</th>
+                                <th class="py-2 px-4 text-center font-normal">Penalty</th>
+                                <th class="py-2 px-4 text-center font-normal">Total Req.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="family-progress-tbody">
+                            <!-- Rows injected by updateFamilyProgressTable -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+            
+            // Initial load of the rows
+            updateFamilyProgressTable();
+        }
+
+        // --- NEW Helper: Filter & Update Rows ---
+        function updateFamilyProgressTable() {
+            const tbody = document.getElementById('family-progress-tbody');
+            if (!tbody) return;
+
+            const filter = document.getElementById('progress-filter') ? document.getElementById('progress-filter').value : 'all';
+            const searchTerm = document.getElementById('family-search') ? document.getElementById('family-search').value.toLowerCase().trim() : '';
+
+            const rowsHtml = Object.entries(adminData.familyProgress).map(([familyId, data]) => {
+                // Get student names
                 const familyDetails = adminData.familyDetails[familyId] || { students: [] };
                 const studentNames = familyDetails.students.length > 0 ? familyDetails.students.join(', ') : 'N/A';
-
-                // Determine background color for Semester 1
-                let s1BgClass = '';
-                if (data.progress.semester1.completed >= data.progress.semester1.totalRequired) {
-                    s1BgClass = 'bg-green-100 text-green-800 font-semibold'; 
-                } else {
-                    s1BgClass = 'bg-orange-100 text-orange-800 font-semibold';
+                
+                // Filter Logic
+                if (searchTerm && !familyId.toLowerCase().includes(searchTerm) && !studentNames.toLowerCase().includes(searchTerm)) {
+                    return ''; // Skip if doesn't match search
                 }
 
-                // Determine background color for Semester 2
-                let s2BgClass = '';
-                if (data.progress.semester2.completed >= data.progress.semester2.totalRequired) {
-                    s2BgClass = 'bg-green-100 text-green-800 font-semibold';
-                } else {
-                    s2BgClass = 'bg-orange-100 text-orange-800 font-semibold';
+                if (filter === 'incomplete-s1') {
+                    if (data.progress.semester1.completed >= data.progress.semester1.totalRequired) return '';
+                } else if (filter === 'incomplete-s2') {
+                    if (data.progress.semester2.completed >= data.progress.semester2.totalRequired) return '';
                 }
+
+                // Determine background color
+                const s1BgClass = (data.progress.semester1.completed >= data.progress.semester1.totalRequired) ? 'bg-green-100 text-green-800 font-semibold' : 'bg-orange-100 text-orange-800 font-semibold';
+                const s2BgClass = (data.progress.semester2.completed >= data.progress.semester2.totalRequired) ? 'bg-green-100 text-green-800 font-semibold' : 'bg-orange-100 text-orange-800 font-semibold';
 
                 return `
                 <tr class="border-b border-slate-200 family-row hover:bg-slate-50" data-family-id="${familyId}">
@@ -670,28 +690,48 @@ function renderSignupsTab() {
                     <td class="py-3 px-4 text-center">${data.progress.semester2.inProgress}</td>
                     <td class="py-3 px-4 text-center text-red-600">${data.progress.semester2.penalty}</td>
                     <td class="py-3 px-4 text-center font-semibold">${data.progress.semester2.totalRequired}</td>
-                </tr>
-            `}).join('');
+                </tr>`;
+            }).join('');
 
-            container.innerHTML = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
-                    <h2 class="text-2xl font-semibold text-slate-900">Family Progress</h2>
-                    <input type="text" id="family-search" placeholder="Search by Family ID..." class="w-full sm:w-1/3 mt-4 sm:mt-0 rounded-md border-slate-300 shadow-sm">
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-slate-700">
-                        <thead class="bg-slate-50 text-xs text-slate-500 uppercase"><tr>
-                            <th rowspan="2" class="py-3 px-4 align-bottom">Family ID / Students</th>
-                            <th colspan="4" class="py-3 px-4 text-center border-b border-l border-slate-200">Semester 1</th>
-                            <th colspan="4" class="py-3 px-4 text-center border-b border-l border-slate-200">Semester 2</th>
-                        </tr><tr>
-                            <th class="py-2 px-4 text-center font-normal border-l border-slate-200">Completed</th><th class="py-2 px-4 text-center font-normal">In Progress</th><th class="py-2 px-4 text-center font-normal">Penalty</th><th class="py-2 px-4 text-center font-normal">Total Req.</th>
-                            <th class="py-2 px-4 text-center font-normal border-l border-slate-200">Completed</th><th class="py-2 px-4 text-center font-normal">In Progress</th><th class="py-2 px-4 text-center font-normal">Penalty</th><th class="py-2 px-4 text-center font-normal">Total Req.</th>
-                        </tr></thead>
-                        <tbody id="family-progress-tbody">${tableRows}</tbody>
-                    </table>
-                </div>
-            </div>`;
+            tbody.innerHTML = rowsHtml || '<tr><td colspan="9" class="text-center py-4 text-slate-500">No matching families found.</td></tr>';
+        }
+
+        // --- NEW Helper: Download CSV ---
+        function downloadFamilyProgressCSV() {
+            const filter = document.getElementById('progress-filter').value;
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Family ID,Students,S1 Completed,S1 In Progress,S1 Penalty,S1 Required,S2 Completed,S2 In Progress,S2 Penalty,S2 Required\n";
+
+            Object.entries(adminData.familyProgress).forEach(([familyId, data]) => {
+                const familyDetails = adminData.familyDetails[familyId] || { students: [] };
+                const studentNames = `"${familyDetails.students.join(', ')}"`; // Quote names for CSV safety
+
+                // Re-apply same filter logic
+                if (filter === 'incomplete-s1' && data.progress.semester1.completed >= data.progress.semester1.totalRequired) return;
+                if (filter === 'incomplete-s2' && data.progress.semester2.completed >= data.progress.semester2.totalRequired) return;
+
+                const row = [
+                    familyId,
+                    studentNames,
+                    data.progress.semester1.completed,
+                    data.progress.semester1.inProgress,
+                    data.progress.semester1.penalty,
+                    data.progress.semester1.totalRequired,
+                    data.progress.semester2.completed,
+                    data.progress.semester2.inProgress,
+                    data.progress.semester2.penalty,
+                    data.progress.semester2.totalRequired
+                ].join(",");
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `family_progress_${filter}_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
         
         function renderMobileMenu() {
@@ -700,121 +740,69 @@ function renderSignupsTab() {
             mobileNav.innerHTML = desktopNav.innerHTML;
         }
         
-        // --- NEW: Function to show family details in modal ---
         function showFamilyDetails(familyId) {
             const familyDetails = adminData.familyDetails[familyId];
-            const familyProgress = adminData.familyProgress[familyId];
-            
             if (!familyDetails) return;
 
             document.getElementById('fd-family-id').textContent = `Family: ${familyId}`;
             document.getElementById('fd-student-names').textContent = `Students: ${familyDetails.students.join(', ')}`;
             
-            // Filter signups for this family
-            // Ensure familyId from data is string for comparison
             const familySignups = adminData.signups.filter(s => String(s.familyid) === String(familyId));
-            
-            // Map opportunity details for easier display
-            // Normalize keys by trimming whitespace
             const volunteeringMap = adminData.volunteering.reduce((map, opp) => {
                 if (opp.opportunityid) { map[String(opp.opportunityid).trim()] = opp; }
                 return map;
             }, {});
 
             let contentHtml = '';
-
-            // Helper function to render signup list
             const renderSignupList = (signups) => {
-                 if (signups.length === 0) {
-                     return `<p class="text-sm text-slate-500 italic">No activity recorded.</p>`;
-                 }
+                 if (signups.length === 0) return `<p class="text-sm text-slate-500 italic">No activity recorded.</p>`;
                  return `<div class="space-y-3">` + signups.map(s => {
-                    // Try to find opportunity details, handle missing data gracefully
                     const oppId = String(s.opportunityid).trim();
                     const opp = volunteeringMap[oppId] || {};
                     const statusColor = s.status === 'Completed' ? 'text-green-700 bg-green-100' : s.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
-                    
-                    // Use fallback values if opportunity details are missing
                     const title = opp.title || `Opportunity ID: ${oppId}`;
                     const dateStr = opp.date ? new Date(opp.date).toLocaleDateString() : (s.signupdate ? new Date(s.signupdate).toLocaleDateString() : 'N/A');
                     const hours = opp.hours !== undefined ? opp.hours : '?';
-
-                    return `
-                        <div class="flex justify-between items-start border-b border-slate-100 pb-2 last:border-0">
-                            <div>
-                                <p class="font-semibold text-sm text-slate-800">${title}</p>
-                                <p class="text-xs text-slate-500">${dateStr} | ${hours} Hours</p>
-                            </div>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span>
-                        </div>
-                    `;
+                    return `<div class="flex justify-between items-start border-b border-slate-100 pb-2 last:border-0"><div><p class="font-semibold text-sm text-slate-800">${title}</p><p class="text-xs text-slate-500">${dateStr} | ${hours} Hours</p></div><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span></div>`;
                  }).join('') + `</div>`;
             };
 
-            // Semester 1
             contentHtml += `<div class="mb-6"><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Semester 1</h3>`;
-            const s1Signups = familySignups.filter(s => {
-                const oppId = String(s.opportunityid).trim();
-                const opp = volunteeringMap[oppId];
-                // If we found the opp details, check semester. If not found, include it here as a fallback? 
-                // Or maybe create an "Uncategorized" section? 
-                // For now, let's include unknowns in S1 to ensure they are seen, or rely on Strict matching?
-                // Let's stick to strict matching for semester buckets to be accurate.
-                return opp && String(opp.semester).trim() === '1';
-            });
-            contentHtml += renderSignupList(s1Signups);
-            contentHtml += `</div>`; // End S1
-
-             // Semester 2
-            contentHtml += `<div><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Semester 2</h3>`;
-            const s2Signups = familySignups.filter(s => {
-                const oppId = String(s.opportunityid).trim();
-                const opp = volunteeringMap[oppId];
-                return opp && String(opp.semester).trim() === '2';
-            });
-            contentHtml += renderSignupList(s2Signups);
-            contentHtml += `</div>`; // End S2
+            contentHtml += renderSignupList(familySignups.filter(s => { const opp = volunteeringMap[String(s.opportunityid).trim()]; return opp && String(opp.semester).trim() === '1'; }));
+            contentHtml += `</div><div><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Semester 2</h3>`;
+            contentHtml += renderSignupList(familySignups.filter(s => { const opp = volunteeringMap[String(s.opportunityid).trim()]; return opp && String(opp.semester).trim() === '2'; }));
+            contentHtml += `</div>`;
             
-            // "Other" / Unmatched Signups Section
-            // This catches signups where the Opportunity ID doesn't match the current Volunteer list (e.g. deleted opps)
-            const otherSignups = familySignups.filter(s => {
-                 const oppId = String(s.opportunityid).trim();
-                 return !volunteeringMap[oppId];
-            });
-
+            const otherSignups = familySignups.filter(s => !volunteeringMap[String(s.opportunityid).trim()]);
             if (otherSignups.length > 0) {
-                contentHtml += `<div class="mt-6"><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Other / Unmatched Activities</h3>`;
-                contentHtml += renderSignupList(otherSignups);
-                contentHtml += `</div>`;
+                contentHtml += `<div class="mt-6"><h3 class="font-bold text-lg text-slate-800 border-b pb-2 mb-3">Other / Unmatched Activities</h3>${renderSignupList(otherSignups)}</div>`;
             }
 
             document.getElementById('fd-content').innerHTML = contentHtml;
             openModal('family-details-modal');
         }
 
-
-        // --- This function is now updated ---
         function updateSignupStatus(signupId, newStatus) {
-            const payload = {
-                action: 'updateSignupStatus', 
-                signupId: signupId,
-                newStatus: newStatus,
-                token: ID_TOKEN // Send the admin token for validation
-            };
-            // Use the new function to call the PARENT web app
+            const payload = { action: 'updateSignupStatus', signupId: signupId, newStatus: newStatus, token: ID_TOKEN };
             return postParentData(payload); 
         }
         
-        // --- EVENT LISTENERS ---
         function addEventListeners() {
-
-            // Main click listener for dynamic content
             document.body.addEventListener('click', e => {
                 const button = e.target.closest('button');
                 const sidebarLink = e.target.closest('.sidebar-link');
-                const familyRow = e.target.closest('.family-row'); // Check for family row click
+                const familyRow = e.target.closest('.family-row');
 
-                // --- Card expand/collapse (Check this first!) ---
+                // --- NEW: Download & Print Buttons ---
+                if (button && button.id === 'download-csv-btn') {
+                    downloadFamilyProgressCSV();
+                    return;
+                }
+                if (button && button.id === 'print-progress-btn') {
+                    window.print();
+                    return;
+                }
+
                 const header = e.target.closest('.event-card-header');
                 if (header) {
                     const targetId = header.dataset.target;
@@ -824,240 +812,118 @@ function renderSignupsTab() {
                         content.classList.toggle('hidden');
                         icon.classList.toggle('rotate-180');
                     }
-                    return; // Action handled, exit
+                    return;
                 }
                 
-                // --- Family Row Click (NEW) ---
                 if (familyRow) {
                     const familyId = familyRow.dataset.familyId;
                     showFamilyDetails(familyId);
                     return;
                 }
 
-                // --- Sidebar Navigation ---
                 if (sidebarLink) {
                     e.preventDefault();
                     document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
                     sidebarLink.classList.add('active');
-                    
                     const tabId = sidebarLink.dataset.tab;
                     document.getElementById('page-title').textContent = sidebarLink.textContent.trim();
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content-active'));
                     document.getElementById(tabId).classList.add('tab-content-active');
-
-                    // Close mobile sidebar if open
                     document.getElementById('mobile-sidebar').classList.add('-translate-x-full');
-                    return; // Action handled, exit
+                    return; 
                 }
 
-                // --- Button Checks ---
                 if (!button) {
-                    // Close modal ONLY if clicking the modal backdrop itself
-                    if (e.target.classList.contains('modal')) {
-                        closeModal(e.target.id);
-                    }
-                    return; // Not a button, sidebar link, or backdrop click, exit
+                    if (e.target.classList.contains('modal')) { closeModal(e.target.id); }
+                    return;
                 }
                 
-                // --- Status button click ---
                 if (button.classList.contains('status-btn')) {
                     const signupId = button.dataset.signupId;
                     document.getElementById('status-modal-signupid').value = signupId;
                     openModal('status-modal');
-                    e.stopPropagation(); // Prevent bubbling up to any potential parent listeners
+                    e.stopPropagation(); 
                 }
 
-                // --- Handle clicks on the new modal buttons ---
                 if (button.id.startsWith('status-btn-')) {
-                    const newStatus = button.id.split('-').pop(); // 'completed', 'inprogress', 'penalty'
+                    const newStatus = button.id.split('-').pop();
                     let formattedStatus = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
                     if (newStatus === 'inprogress') formattedStatus = 'In Progress';
-                    
                     const signupId = document.getElementById('status-modal-signupid').value;
-                    
-                    // Disable button to prevent double-click
-                    button.disabled = true; 
-                    button.textContent = 'Updating...';
+                    button.disabled = true; button.textContent = 'Updating...';
 
-                    // --- This is the new, optimistic-update logic ---
-                    updateSignupStatus(signupId, formattedStatus)
-                        .then(() => {
-                            // SUCCESS: Update the UI immediately
-                            
-                            // 1. Find the original button on the page
-                            const originalButton = document.querySelector(`.status-btn[data-signup-id="${signupId}"]`);
-                            if (originalButton) {
-                                // 2. Update its text and color
-                                originalButton.textContent = formattedStatus;
-                                originalButton.dataset.currentStatus = formattedStatus;
-                                const statusColor = formattedStatus === 'Completed' ? 'text-green-700 bg-green-100' : formattedStatus === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
-                                originalButton.className = `status-btn inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor} cursor-pointer hover:opacity-80 transition-opacity`;
-                            }
-                            
-                            // 3. Update the local data object
-                            const signupInAdminData = adminData.signups.find(s => s.signupid == signupId);
-                            if (signupInAdminData) {
-                                signupInAdminData.status = formattedStatus;
-                            }
-                        })
-                        .catch(() => {
-                            // Handle failure
-                            alert("An error occurred. The status was not updated.");
-                        })
-                        .finally(() => {
-                            // Re-enable all buttons
-                            document.getElementById('status-btn-completed').disabled = false;
-                            document.getElementById('status-btn-completed').textContent = 'Mark as Completed';
-                            document.getElementById('status-btn-inprogress').disabled = false;
-                            document.getElementById('status-btn-inprogress').textContent = 'Mark as In Progress';
-                            document.getElementById('status-btn-penalty').disabled = false;
-                            document.getElementById('status-btn-penalty').textContent = 'Mark as Penalty';
-                            closeModal('status-modal');
-                        });
+                    updateSignupStatus(signupId, formattedStatus).then(() => {
+                        const originalButton = document.querySelector(`.status-btn[data-signup-id="${signupId}"]`);
+                        if (originalButton) {
+                            originalButton.textContent = formattedStatus;
+                            originalButton.dataset.currentStatus = formattedStatus;
+                            const statusColor = formattedStatus === 'Completed' ? 'text-green-700 bg-green-100' : formattedStatus === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
+                            originalButton.className = `status-btn inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor} cursor-pointer hover:opacity-80 transition-opacity`;
+                        }
+                        const signupInAdminData = adminData.signups.find(s => s.signupid == signupId);
+                        if (signupInAdminData) { signupInAdminData.status = formattedStatus; }
+                    }).catch(() => { alert("An error occurred. The status was not updated."); })
+                    .finally(() => {
+                        document.getElementById('status-btn-completed').disabled = false; document.getElementById('status-btn-completed').textContent = 'Mark as Completed';
+                        document.getElementById('status-btn-inprogress').disabled = false; document.getElementById('status-btn-inprogress').textContent = 'Mark as In Progress';
+                        document.getElementById('status-btn-penalty').disabled = false; document.getElementById('status-btn-penalty').textContent = 'Mark as Penalty';
+                        closeModal('status-modal');
+                    });
                 }
 
-
-                // Create Event Button
-                if (button.id === 'create-event-btn') {
-                    openModal('event-modal');
-                }
-
-                // Mobile menu toggles
-                if (button.id === 'mobile-menu-button') {
-                    document.getElementById('mobile-sidebar').classList.remove('-translate-x-full');
-                }
-                if (button.id === 'mobile-close-button' || e.target.id === 'mobile-sidebar-overlay') {
-                    document.getElementById('mobile-sidebar').classList.add('-translate-x-full');
-                }
+                if (button.id === 'create-event-btn') { openModal('event-modal'); }
+                if (button.id === 'mobile-menu-button') { document.getElementById('mobile-sidebar').classList.remove('-translate-x-full'); }
+                if (button.id === 'mobile-close-button' || e.target.id === 'mobile-sidebar-overlay') { document.getElementById('mobile-sidebar').classList.add('-translate-x-full'); }
             });
 
-            // Form Submissions
             document.getElementById('event-form').addEventListener('submit', e => {
                 e.preventDefault();
                 const button = document.getElementById('save-event-btn');
-                button.textContent = 'Saving...';
-                button.disabled = true;
-
-                const eventData = {
-                    eventid: document.getElementById('event-id').value,
-                    eventname: document.getElementById('event-name').value,
-                    eventdate: document.getElementById('event-date').value,
-                    grade: document.getElementById('event-grade').value,
-                    classroom: document.getElementById('event-classroom').value
-                };
-
-                const payload = {
-                    action: 'addEvent',
-                    data: eventData,
-                    token: ID_TOKEN
-                };
-                
-                postAdminData(payload, 'Event created successfully! Refreshing data...')
-                    .then(() => {
-                        closeModal('event-modal');
-                        document.getElementById('event-form').reset();
-                    })
-                    .finally(() => {
-                        button.textContent = 'Save Event';
-                        button.disabled = false;
-                    });
+                button.textContent = 'Saving...'; button.disabled = true;
+                const eventData = { eventid: document.getElementById('event-id').value, eventname: document.getElementById('event-name').value, eventdate: document.getElementById('event-date').value, grade: document.getElementById('event-grade').value, classroom: document.getElementById('event-classroom').value };
+                postAdminData({ action: 'addEvent', data: eventData, token: ID_TOKEN }, 'Event created successfully!').then(() => { closeModal('event-modal'); document.getElementById('event-form').reset(); }).finally(() => { button.textContent = 'Save Event'; button.disabled = false; });
             });
 
             document.getElementById('expense-form').addEventListener('submit', e => {
                 e.preventDefault();
                 const button = e.target.querySelector('button[type="submit"]');
-                button.textContent = 'Submitting...';
-                button.disabled = true;
-
-                const expenseData = {
-                    item: document.getElementById('expense-item').value,
-                    description: document.getElementById('expense-desc').value,
-                    category: document.getElementById('expense-cat').value,
-                    amount: document.getElementById('expense-amount').value
-                };
-
-                const payload = {
-                    action: 'addExpense',
-                    data: expenseData,
-                    token: ID_TOKEN
-                };
-
-                postAdminData(payload, 'Expense submitted! Refreshing data...')
-                    .then(() => document.getElementById('expense-form').reset())
-                    .finally(() => {
-                        button.textContent = 'Submit Expense';
-                        button.disabled = false;
-                    });
+                button.textContent = 'Submitting...'; button.disabled = true;
+                const expenseData = { item: document.getElementById('expense-item').value, description: document.getElementById('expense-desc').value, category: document.getElementById('expense-cat').value, amount: document.getElementById('expense-amount').value };
+                postAdminData({ action: 'addExpense', data: expenseData, token: ID_TOKEN }, 'Expense submitted!').then(() => document.getElementById('expense-form').reset()).finally(() => { button.textContent = 'Submit Expense'; button.disabled = false; });
             });
             
-            // Input/Change Listeners
+            // --- NEW LISTENERS for Progress Tab ---
             const familySearch = document.getElementById('family-search');
-            if (familySearch) {
-                familySearch.addEventListener('input', e => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    document.querySelectorAll('#family-progress-tbody .family-row').forEach(row => {
-                        const familyId = row.dataset.familyId.toLowerCase();
-                        row.style.display = familyId.includes(searchTerm) ? '' : 'none';
-                    });
-                });
-            }
+            if (familySearch) { familySearch.addEventListener('input', updateFamilyProgressTable); }
             
+            const progressFilter = document.getElementById('progress-filter');
+            if (progressFilter) { progressFilter.addEventListener('change', updateFamilyProgressTable); }
+            
+            // ... existing listeners ...
             const eventStatusFilter = document.getElementById('event-status-filter');
             if(eventStatusFilter) {
                 eventStatusFilter.addEventListener('change', e => {
                     const eventId = e.target.value;
                     const display = document.getElementById('event-status-display');
-                    if (eventId === 'all') {
-                        display.innerHTML = '<p class="text-slate-500">Select an event from the dropdown to see its status.</p>';
-                        return;
-                    }
+                    if (eventId === 'all') { display.innerHTML = '<p class="text-slate-500">Select an event from the dropdown to see its status.</p>'; return; }
                     const stats = adminData.eventStats[eventId];
                     if (stats) {
                         const hoursProgress = stats.hoursRequired > 0 ? (stats.hoursFilled / stats.hoursRequired) * 100 : 0;
                         const volunteerProgress = stats.totalNeeded > 0 ? (stats.totalSignedUp / stats.totalNeeded) * 100 : 0;
-                        display.innerHTML = `
-                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <h4 class="font-semibold text-slate-700">Volunteer Spots</h4>
-                                    <p class="text-lg">${stats.totalSignedUp} / ${stats.totalNeeded} Filled</p>
-                                    <div class="w-full bg-slate-200 rounded-full h-2.5 mt-2">
-                                        <div class="bg-teal-600 h-2.5 rounded-full" style="width: ${volunteerProgress}%"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-slate-700">Volunteer Hours</h4>
-                                    <p class="text-lg">${stats.hoursFilled} / ${stats.hoursRequired} Hours Filled</p>
-                                    <div class="w-full bg-slate-200 rounded-full h-2.5 mt-2">
-                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${hoursProgress}%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
+                        display.innerHTML = `<div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6"><div><h4 class="font-semibold text-slate-700">Volunteer Spots</h4><p class="text-lg">${stats.totalSignedUp} / ${stats.totalNeeded} Filled</p><div class="w-full bg-slate-200 rounded-full h-2.5 mt-2"><div class="bg-teal-600 h-2.5 rounded-full" style="width: ${volunteerProgress}%"></div></div></div><div><h4 class="font-semibold text-slate-700">Volunteer Hours</h4><p class="text-lg">${stats.hoursFilled} / ${stats.hoursRequired} Hours Filled</p><div class="w-full bg-slate-200 rounded-full h-2.5 mt-2"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ${hoursProgress}%"></div></div></div></div>`;
                     }
                 });
             }
-
-            // New listener for the volunteering event filter
             const volEventFilter = document.getElementById('volunteering-event-filter');
-            if (volEventFilter) {
-                volEventFilter.addEventListener('change', applyVolunteerFilters);
-            }
-            
+            if (volEventFilter) { volEventFilter.addEventListener('change', applyVolunteerFilters); }
             document.getElementById('hours-slider-s1')?.addEventListener('input', updateRemainingFamiliesCount);
             document.getElementById('hours-slider-s2')?.addEventListener('input', updateRemainingFamiliesCount);
         }
 
-        // --- INITIALIZATION ---
         window.onload = function() {
             try {
-                google.accounts.id.initialize({
-                  client_id: CLIENT_ID,
-                  callback: handleCredentialResponse
-                });
-                google.accounts.id.renderButton(
-                  document.getElementById('google-signin-button-container'),
-                  { theme: "outline", size: "large", width: "300" } 
-                );
+                google.accounts.id.initialize({ client_id: CLIENT_ID, callback: handleCredentialResponse });
+                google.accounts.id.renderButton(document.getElementById('google-signin-button-container'), { theme: "outline", size: "large", width: "300" });
                 google.accounts.id.prompt();
             } catch (error) {
                 console.error("Google Sign-In initialization failed:", error);
@@ -1065,6 +931,5 @@ function renderSignupsTab() {
             }
         };
     </script>
-
 </body>
 </html>
