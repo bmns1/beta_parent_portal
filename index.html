@@ -251,6 +251,72 @@
         function openModal(modalId) { document.getElementById(modalId).classList.add('flex'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('flex'); }
 
+        // --- NEW: Helper to get valid float hours ---
+        function getOpportunityHours(opp) {
+            if (!opp) return 0;
+            // Check common keys from backend (normalize handling)
+            const val = opp.hours || opp['number of hours'] || opp.numberofhours || opp.duration || 0;
+            return parseFloat(val) || 0;
+        }
+
+        // --- NEW: Recalculate Logic to Fix Float Issues ---
+        function recalculateFamilyProgress() {
+            console.log("Recalculating family progress on frontend...");
+            
+            // Create a map for quick opportunity lookup
+            const volMap = {};
+            if (adminData.volunteering) {
+                adminData.volunteering.forEach(opp => {
+                    const id = String(opp.opportunityid || opp.id).trim();
+                    volMap[id] = opp;
+                });
+            }
+
+            // Iterate over all signups and aggregate hours per family
+            if (adminData.signups && adminData.familyProgress) {
+                // Initialize temp storage for calculation
+                const calcMap = {}; 
+                Object.keys(adminData.familyProgress).forEach(fid => {
+                    calcMap[fid] = {
+                        s1: { completed: 0, inProgress: 0 },
+                        s2: { completed: 0, inProgress: 0 }
+                    };
+                });
+
+                adminData.signups.forEach(signup => {
+                    const fid = String(signup.familyid);
+                    if (!calcMap[fid]) return; // Skip if family not tracked
+
+                    const oppId = String(signup.opportunityid).trim();
+                    const opp = volMap[oppId];
+                    
+                    if (opp) {
+                        const hours = getOpportunityHours(opp);
+                        const semester = String(opp.semester).trim();
+                        const status = signup.status;
+
+                        if (semester === '1') {
+                            if (status === 'Completed') calcMap[fid].s1.completed += hours;
+                            else if (status === 'In Progress' || status === 'Pending Approval') calcMap[fid].s1.inProgress += hours;
+                        } else if (semester === '2') {
+                            if (status === 'Completed') calcMap[fid].s2.completed += hours;
+                            else if (status === 'In Progress' || status === 'Pending Approval') calcMap[fid].s2.inProgress += hours;
+                        }
+                    }
+                });
+
+                // Apply calculations back to adminData (Overwrite backend integers)
+                Object.keys(calcMap).forEach(fid => {
+                    if (adminData.familyProgress[fid]) {
+                        adminData.familyProgress[fid].progress.semester1.completed = calcMap[fid].s1.completed;
+                        adminData.familyProgress[fid].progress.semester1.inProgress = calcMap[fid].s1.inProgress;
+                        adminData.familyProgress[fid].progress.semester2.completed = calcMap[fid].s2.completed;
+                        adminData.familyProgress[fid].progress.semester2.inProgress = calcMap[fid].s2.inProgress;
+                    }
+                });
+            }
+        }
+
         // --- DATA FETCH & RENDER ---
         function fetchAdminData(token) {
             document.getElementById('loading-overlay').classList.remove('hidden');
@@ -261,6 +327,11 @@
                         throw new Error(data.error || "Access Denied. This account is not authorized for the admin portal.");
                     }
                     adminData = data.data;
+                    
+                    // --- APPLY FIX HERE ---
+                    recalculateFamilyProgress();
+                    // ----------------------
+
                     document.getElementById('loading-overlay').classList.add('hidden');
                     document.getElementById('portal-container').classList.remove('hidden');
                     renderAllTabs();
@@ -306,12 +377,13 @@
             // FIX: Use parseFloat instead of parseInt for hours calculation
             const s1Completed = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester1.completed), 0).toFixed(1);
             const s1InProgress = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester1.inProgress), 0).toFixed(1);
-            const s1Vacant = adminData.volunteering.filter(o => o.semester == 1).reduce((sum, opp) => sum + ((parseFloat(opp.neededvolunteers) || 0) - (parseFloat(opp.signedupvolunteers) || 0)) * (parseFloat(opp['number of hours']) || 0), 0).toFixed(1);
+            // Use getOpportunityHours helper here too
+            const s1Vacant = adminData.volunteering.filter(o => o.semester == 1).reduce((sum, opp) => sum + ((parseFloat(opp.neededvolunteers) || 0) - (parseFloat(opp.signedupvolunteers) || 0)) * getOpportunityHours(opp), 0).toFixed(1);
             const s1TotalRequired = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester1.baseRequired), 0).toFixed(1);
             
             const s2Completed = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester2.completed), 0).toFixed(1);
             const s2InProgress = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester2.inProgress), 0).toFixed(1);
-            const s2Vacant = adminData.volunteering.filter(o => o.semester == 2).reduce((sum, opp) => sum + ((parseFloat(opp.neededvolunteers) || 0) - (parseFloat(opp.signedupvolunteers) || 0)) * (parseFloat(opp['number of hours']) || 0), 0).toFixed(1);
+            const s2Vacant = adminData.volunteering.filter(o => o.semester == 2).reduce((sum, opp) => sum + ((parseFloat(opp.neededvolunteers) || 0) - (parseFloat(opp.signedupvolunteers) || 0)) * getOpportunityHours(opp), 0).toFixed(1);
             const s2TotalRequired = Object.values(adminData.familyProgress).reduce((sum, family) => sum + parseFloat(family.progress.semester2.baseRequired), 0).toFixed(1);
 
             container.innerHTML = `
@@ -764,7 +836,7 @@
                     const title = opp.title || `Opportunity ID: ${oppId}`;
                     const dateStr = opp.date ? new Date(opp.date).toLocaleDateString() : (s.signupdate ? new Date(s.signupdate).toLocaleDateString() : 'N/A');
                     // FIX: Use parseFloat and handle "undefined"
-                    const hours = opp.hours !== undefined ? parseFloat(opp.hours) : '?';
+                    const hours = getOpportunityHours(opp);
                     return `<div class="flex justify-between items-start border-b border-slate-100 pb-2 last:border-0"><div><p class="font-semibold text-sm text-slate-800">${title}</p><p class="text-xs text-slate-500">${dateStr} | ${hours} Hours</p></div><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}">${s.status}</span></div>`;
                  }).join('') + `</div>`;
             };
